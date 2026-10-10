@@ -211,11 +211,29 @@ func SendFragmented(targetConn net.Conn, payload []byte, parsed ParsedTLS, strat
 		return err
 	}
 
-	// For Roblox and SNI hosts, apply combo fragmentation (split 1 + SNI midpoint split)
+	// For all hosts, find the root domain in payload to split right inside the blocked name
 	idx := -1
-	if parsed.SNIOffset > 0 && parsed.SNIOffset+3 < len(payload) {
-		idx = parsed.SNIOffset + 3
-	} else {
+	if parsed.SNI != "" {
+		parts := strings.Split(parsed.SNI, ".")
+		var rootDomain string
+		if len(parts) >= 2 {
+			rootDomain = parts[len(parts)-2] + "." + parts[len(parts)-1]
+		} else {
+			rootDomain = parsed.SNI
+		}
+		found := bytes.Index(payload, []byte(rootDomain))
+		if found > 0 {
+			mid := 3
+			if len(rootDomain) <= 3 {
+				mid = 1
+			}
+			if found+mid < len(payload) {
+				idx = found + mid
+			}
+		}
+	}
+
+	if idx == -1 {
 		found := bytes.Index(payload, []byte("roblox.com"))
 		if found > 0 && found+3 < len(payload) {
 			idx = found + 3
@@ -223,10 +241,10 @@ func SendFragmented(targetConn net.Conn, payload []byte, parsed ParsedTLS, strat
 	}
 
 	if idx > 1 && idx < len(payload) {
-		if err := writeSegment(targetConn, payload[:1], 2*time.Millisecond); err != nil {
+		if err := writeSegment(targetConn, payload[:1], 3*time.Millisecond); err != nil {
 			return err
 		}
-		if err := writeSegment(targetConn, payload[1:idx], 2*time.Millisecond); err != nil {
+		if err := writeSegment(targetConn, payload[1:idx], 3*time.Millisecond); err != nil {
 			return err
 		}
 		_, err := targetConn.Write(payload[idx:])

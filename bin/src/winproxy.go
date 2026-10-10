@@ -343,6 +343,9 @@ var robloxHostsEntries = []string{
 	"127.0.0.1 inventory.roblox.com",
 	"127.0.0.1 develop.roblox.com",
 	"127.0.0.1 badges.roblox.com",
+	"127.0.0.1 accountsettings.roblox.com",
+	"127.0.0.1 ephemeralcounters.api.roblox.com",
+	"127.0.0.1 gameinternationalization.roblox.com",
 }
 
 // EnableRobloxHosts injects direct unblocked Roblox IPs into Windows hosts file to bypass ISP DNS sinkholes

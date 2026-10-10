@@ -227,7 +227,7 @@ func GetCandidateIPs(host string) []string {
 	if pinned, ok := pinnedRobloxHosts[lowerHost]; ok && len(pinned) > 0 {
 		result = append(result, pinned...)
 	} else if strings.HasSuffix(lowerHost, ".roblox.com") {
-		result = append(result, "128.116.5.3", "128.116.31.3")
+		result = append(result, "128.116.5.3")
 	}
 
 	ips, err := ResolveAllSecure(host)
