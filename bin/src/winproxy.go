@@ -225,9 +225,12 @@ var robloxHostsEntries = []string{
 	"128.116.31.3 ecsv2.roblox.com",
 	"128.116.31.3 realtime-signalr.roblox.com",
 	"128.116.31.3 notifications.roblox.com",
+	"99.84.91.31 clientsettingscdn.roblox.com",
+	"99.84.91.31 clientsettings.roblox.com",
 	"128.116.5.3 gamejoin.roblox.com",
 	"128.116.31.3 assetgame.roblox.com",
 	"128.116.5.3 versioncompatibility.api.roblox.com",
+	"2.16.16.154 setup.rbxcdn.com",
 }
 
 // EnableRobloxHosts injects direct unblocked Roblox IPs into Windows hosts file to bypass ISP DNS sinkholes
