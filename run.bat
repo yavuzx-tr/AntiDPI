@@ -9,7 +9,7 @@ if %ERRORLEVEL% neq 0 (
     exit /b
 )
 
-title AntiDPI
+title AntiDPI Final
 cls
 
 :: Disable IPv6 to prevent ISP fake AAAA sinkhole poisoning
@@ -32,5 +32,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$h = 'C:\Windows\System3
 ipconfig /flushdns >nul 2>&1
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+REG DELETE "HKCU\Environment" /v ALL_PROXY /f 2>$null
+REG DELETE "HKCU\Environment" /v all_proxy /f 2>$null
+REG DELETE "HKCU\Environment" /v HTTP_PROXY /f 2>$null
+REG DELETE "HKCU\Environment" /v HTTPS_PROXY /f 2>$null
 netsh advfirewall firewall delete rule name="AntiDPI_BlockQUIC" >nul 2>&1
 powershell -NoProfile -Command "$s=@'[DllImport(\"wininet.dll\")]public static extern bool InternetSetOption(IntPtr h,int o,IntPtr b,int l);'@;$w=Add-Type -MemberDefinition $s -Name W -PassThru;[W]::InternetSetOption(0,39,0,0);[W]::InternetSetOption(0,37,0,0)" >nul 2>&1

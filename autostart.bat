@@ -12,9 +12,9 @@ if %ERRORLEVEL% neq 0 (
 
 :MENU
 cls
-title AntiDPI - Settings & Autostart
+title AntiDPI Final - Settings & Autostart
 echo ===================================================================
-echo                 AntiDPI - Settings
+echo                 AntiDPI Final - Settings
 echo ===================================================================
 echo.
 echo   [1] Enable Windows Autostart (Start automatically on system logon)
@@ -34,13 +34,13 @@ goto MENU
 :ADD
 cls
 echo [*] Enabling Windows Autostart (Setting scheduled task with highest privileges)...
-schtasks /create /tn "AntiDPI" /tr "\"%~dp0bin\antidpi.exe\"" /sc onlogon /rl highest /f >nul 2>&1
+schtasks /create /tn "AntiDPI" /tr "\"%~dp0run.bat\"" /sc onlogon /rl highest /f >nul 2>&1
 if %ERRORLEVEL% equ 0 (
     echo.
-    echo [SUCCESS] AntiDPI has been added to Windows Autostart!
+    echo [SUCCESS] AntiDPI Final has been added to Windows Autostart!
     echo It will automatically start every time your PC boots up.
 ) else (
-    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut(\"$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\AntiDPI.lnk\"); $s.TargetPath = \"%~dp0bin\antidpi.exe\"; $s.WorkingDirectory = \"%~dp0bin\"; $s.Save()" >nul 2>&1
+    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut(\"$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\AntiDPI.lnk\"); $s.TargetPath = \"%~dp0run.bat\"; $s.WorkingDirectory = \"%~dp0\"; $s.Save()" >nul 2>&1
     echo.
     echo [SUCCESS] Added to Windows Startup folder.
 )
@@ -56,7 +56,7 @@ if exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\AntiDPI.lnk" (
     del /f /q "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\AntiDPI.lnk" >nul 2>&1
 )
 echo.
-echo [OK] AntiDPI has been removed from Windows Autostart.
+echo [OK] AntiDPI Final has been removed from Windows Autostart.
 echo.
 pause
 goto MENU
@@ -70,6 +70,10 @@ for /f "tokens=4*" %%a in ('netsh interface show interface ^| findstr "Connected
 ipconfig /flushdns >nul 2>&1
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+REG DELETE "HKCU\Environment" /v ALL_PROXY /f >nul 2>&1
+REG DELETE "HKCU\Environment" /v all_proxy /f >nul 2>&1
+REG DELETE "HKCU\Environment" /v HTTP_PROXY /f >nul 2>&1
+REG DELETE "HKCU\Environment" /v HTTPS_PROXY /f >nul 2>&1
 netsh advfirewall firewall delete rule name="AntiDPI_BlockQUIC" >nul 2>&1
 powershell -NoProfile -Command "$s=@'[DllImport(\"wininet.dll\")]public static extern bool InternetSetOption(IntPtr h,int o,IntPtr b,int l);'@;$w=Add-Type -MemberDefinition $s -Name W -PassThru;[W]::InternetSetOption(0,39,0,0);[W]::InternetSetOption(0,37,0,0)" >nul 2>&1
 echo.
