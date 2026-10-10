@@ -89,7 +89,7 @@ func printBanner() {
 	fmt.Printf("   %s[OK]%s Engine Status : %sActive (Running in Silent Mode)%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
 	fmt.Printf("   %s[OK]%s SNI Relay     : %sTransparent 127.0.0.1:443 & :80%s\n", ColorGreen, ColorReset, ColorWhite, ColorReset)
 	fmt.Printf("   %s[OK]%s DNS Security  : %sRFC 8484 DoH Relay (127.0.0.1:53)%s\n", ColorGreen, ColorReset, ColorWhite, ColorReset)
-	fmt.Printf("   %s[OK]%s Protection    : %sRoblox (Web + In-Game) & Discord%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
+	fmt.Printf("   %s[OK]%s Protection    : %sGlobal Middlebox & DPI Circumvention%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
 	fmt.Println()
 	fmt.Printf("%s =============================================================%s\n", ColorCyan, ColorReset)
 	fmt.Println()
