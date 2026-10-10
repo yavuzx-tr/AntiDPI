@@ -214,14 +214,18 @@ func notifyWinINet() {
 
 // ConfigureAdapterDNS sets connected network adapters' DNS to the local DoH relay
 func ConfigureAdapterDNS(dnsIP string) {
-	cmd := exec.Command("cmd", "/c", fmt.Sprintf("for /f \"tokens=4*\" %%a in ('netsh interface show interface ^| findstr \"Connected\"') do netsh interface ip set dns name=\"%%b\" static %s", dnsIP))
-	_ = cmd.Run()
+	psCmd := fmt.Sprintf("Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike '*Virtual*' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ServerAddresses '%s' }", dnsIP)
+	_ = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", psCmd).Run()
+	_ = exec.Command("netsh", "interface", "ip", "set", "dns", "name=Wi-Fi", "static", dnsIP).Run()
+	_ = exec.Command("netsh", "interface", "ip", "set", "dns", "name=Ethernet", "static", dnsIP).Run()
 	FlushDNS()
 }
 
 // RestoreAdapterDNS resets connected network adapters' DNS to DHCP
 func RestoreAdapterDNS() {
-	cmd := exec.Command("cmd", "/c", "for /f \"tokens=4*\" %%a in ('netsh interface show interface ^| findstr \"Connected\"') do netsh interface ip set dns name=\"%%b\" dhcp")
-	_ = cmd.Run()
+	psCmd := "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike '*Virtual*' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ResetServerAddresses }"
+	_ = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", psCmd).Run()
+	_ = exec.Command("netsh", "interface", "ip", "set", "dns", "name=Wi-Fi", "dhcp").Run()
+	_ = exec.Command("netsh", "interface", "ip", "set", "dns", "name=Ethernet", "dhcp").Run()
 	FlushDNS()
 }
