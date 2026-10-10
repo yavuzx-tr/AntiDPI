@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -84,13 +85,6 @@ func (s *ProxyServer) handleHTTPConnect(clientConn net.Conn, br *bufio.Reader) {
 		}
 	}
 
-	targetConn, err := DialTarget(host, port)
-	if err != nil {
-		_, _ = clientConn.Write([]byte("HTTP/1.1 502 Bad Gateway\r\n\r\n"))
-		return
-	}
-	defer targetConn.Close()
-
 	if _, err := clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n")); err != nil {
 		return
 	}
@@ -128,20 +122,73 @@ func (s *ProxyServer) handleHTTPConnect(clientConn net.Conn, br *bufio.Reader) {
 
 	isTLS := (n >= 5 && payload[0] == 0x16)
 	if (parsed.IsClientHello || isTLS) && ShouldBypassDPI(targetHost) {
-		statsBypassed.Add(1)
-		LogBypass(targetHost, strat.String())
-		if err := SendFragmented(targetConn, payload, parsed, strat); err != nil {
+		targetConn, err := s.dialAndConnectTLS(targetHost, port, payload, parsed, strat, clientConn)
+		if err != nil {
 			return
 		}
+		defer targetConn.Close()
+		SplicePipes(br, clientConn, targetConn)
 	} else {
 		statsDirect.Add(1)
 		LogDirect(targetHost)
+		targetConn, err := DialTarget(host, port)
+		if err != nil {
+			return
+		}
+		defer targetConn.Close()
 		if _, err := targetConn.Write(payload); err != nil {
 			return
 		}
+		SplicePipes(br, clientConn, targetConn)
+	}
+}
+
+func (s *ProxyServer) dialAndConnectTLS(targetHost, port string, payload []byte, parsed ParsedTLS, strat Strategy, clientConn net.Conn) (net.Conn, error) {
+	candidateIPs := GetCandidateIPs(targetHost)
+	var lastErr error
+
+	for _, ip := range candidateIPs {
+		addr := net.JoinHostPort(ip, port)
+		targetConn, err := net.DialTimeout("tcp", addr, 2500*time.Millisecond)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		if tc, ok := targetConn.(*net.TCPConn); ok {
+			_ = tc.SetNoDelay(true)
+		}
+
+		if err := SendFragmented(targetConn, payload, parsed, strat); err != nil {
+			targetConn.Close()
+			lastErr = err
+			continue
+		}
+
+		// Wait up to 2500ms for initial server response (TLS ServerHello)
+		_ = targetConn.SetReadDeadline(time.Now().Add(2500 * time.Millisecond))
+		respBuf := make([]byte, 16384)
+		nr, err := targetConn.Read(respBuf)
+		_ = targetConn.SetReadDeadline(time.Time{})
+
+		if err != nil || nr == 0 {
+			targetConn.Close()
+			lastErr = err
+			continue
+		}
+
+		// Forward ServerHello to client
+		if _, err := clientConn.Write(respBuf[:nr]); err != nil {
+			targetConn.Close()
+			return nil, err
+		}
+
+		statsBypassed.Add(1)
+		LogBypass(targetHost, strat.String())
+		return targetConn, nil
 	}
 
-	SplicePipes(br, clientConn, targetConn)
+	return nil, fmt.Errorf("all endpoints failed, last: %v", lastErr)
 }
 
 func (s *ProxyServer) handlePlainHTTP(clientConn net.Conn, br *bufio.Reader, req *http.Request) {
@@ -235,13 +282,7 @@ func (s *ProxyServer) handleSOCKS5(clientConn net.Conn, br *bufio.Reader) {
 	}
 	targetPort := int(portBuf[0])<<8 | int(portBuf[1])
 
-	targetConn, err := DialTarget(targetHost, strconv.Itoa(targetPort))
-	if err != nil {
-		_, _ = clientConn.Write([]byte{0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
-		return
-	}
-	defer targetConn.Close()
-
+	portStr := strconv.Itoa(targetPort)
 	if _, err := clientConn.Write([]byte{0x05, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0, 0}); err != nil {
 		return
 	}
@@ -277,18 +318,23 @@ func (s *ProxyServer) handleSOCKS5(clientConn net.Conn, br *bufio.Reader) {
 
 	isTLS := (n >= 5 && payload[0] == 0x16)
 	if (parsed.IsClientHello || isTLS) && ShouldBypassDPI(targetDisplay) {
-		statsBypassed.Add(1)
-		LogBypass(targetDisplay, strat.String())
-		if err := SendFragmented(targetConn, payload, parsed, strat); err != nil {
+		targetConn, err := s.dialAndConnectTLS(targetDisplay, portStr, payload, parsed, strat, clientConn)
+		if err != nil {
 			return
 		}
+		defer targetConn.Close()
+		SplicePipes(br, clientConn, targetConn)
 	} else {
 		statsDirect.Add(1)
 		LogDirect(targetDisplay)
+		targetConn, err := DialTarget(targetHost, portStr)
+		if err != nil {
+			return
+		}
+		defer targetConn.Close()
 		if _, err := targetConn.Write(payload); err != nil {
 			return
 		}
+		SplicePipes(br, clientConn, targetConn)
 	}
-
-	SplicePipes(br, clientConn, targetConn)
 }

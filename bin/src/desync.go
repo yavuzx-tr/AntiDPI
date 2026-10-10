@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
 	"io"
 	"net"
@@ -14,24 +15,18 @@ import (
 type Strategy int32
 
 const (
-	StrategySplit1     Strategy = iota // Split at byte 1 (separates initial TLS record byte)
-	StrategySplit2                     // Split at byte 2 (defeats deep packet inspection)
-	StrategyMicroChunk                 // 3-way packet micro-fragmentation (1, 10, rest)
-	StrategySNIMid                     // Split inside SNI domain hostname
+	StrategySplit1     Strategy = 0 // Split at byte 1 (separates initial TLS record byte)
+	StrategyMicroChunk Strategy = 1 // 3-way packet micro-fragmentation (1, 10, rest)
 )
 
 func (s Strategy) String() string {
 	switch s {
 	case StrategySplit1:
 		return "Split-1 (Split at byte 1)"
-	case StrategySplit2:
-		return "Split-2 (Split at byte 2)"
 	case StrategyMicroChunk:
 		return "Micro-Chunk (3-way packet fragmentation: 1, 10, rest)"
-	case StrategySNIMid:
-		return "SNI-MidSplit (Split at SNI offset)"
 	default:
-		return "Split-2 (Default)"
+		return "Split-1 (Default)"
 	}
 }
 
@@ -62,9 +57,9 @@ func SetStrategy(s Strategy) {
 	currentStrategy.Store(int32(s))
 }
 
-// CycleStrategy switches to the next available strategy
+// CycleStrategy switches to the next available working strategy
 func CycleStrategy() Strategy {
-	next := (GetStrategy() + 1) % 4
+	next := (GetStrategy() + 1) % 2
 	SetStrategy(next)
 	return next
 }
@@ -211,25 +206,40 @@ func SendFragmented(targetConn net.Conn, payload []byte, parsed ParsedTLS, strat
 		_ = tcpConn.SetNoDelay(true)
 	}
 
-	splitAt := 2
+	if len(payload) <= 1 {
+		_, err := targetConn.Write(payload)
+		return err
+	}
+
+	// For Roblox and SNI hosts, apply combo fragmentation (split 1 + SNI midpoint split)
+	idx := -1
+	if parsed.SNIOffset > 0 && parsed.SNIOffset+3 < len(payload) {
+		idx = parsed.SNIOffset + 3
+	} else {
+		found := bytes.Index(payload, []byte("roblox.com"))
+		if found > 0 && found+3 < len(payload) {
+			idx = found + 3
+		}
+	}
+
+	if idx > 1 && idx < len(payload) {
+		if err := writeSegment(targetConn, payload[:1], 2*time.Millisecond); err != nil {
+			return err
+		}
+		if err := writeSegment(targetConn, payload[1:idx], 2*time.Millisecond); err != nil {
+			return err
+		}
+		_, err := targetConn.Write(payload[idx:])
+		return err
+	}
 
 	switch strategy {
-	case StrategySplit1:
-		splitAt = 1
-	case StrategySplit2:
-		splitAt = 2
-	case StrategySNIMid:
-		if parsed.SNIOffset > 0 && parsed.SNIOffset+2 < len(payload) {
-			splitAt = parsed.SNIOffset + 2
-		} else {
-			splitAt = 2
-		}
 	case StrategyMicroChunk:
-		if err := writeSegment(targetConn, payload[:1], 3*time.Millisecond); err != nil {
+		if err := writeSegment(targetConn, payload[:1], 2*time.Millisecond); err != nil {
 			return err
 		}
 		if len(payload) > 10 {
-			if err := writeSegment(targetConn, payload[1:10], 3*time.Millisecond); err != nil {
+			if err := writeSegment(targetConn, payload[1:10], 2*time.Millisecond); err != nil {
 				return err
 			}
 			_, err := targetConn.Write(payload[10:])
@@ -237,19 +247,16 @@ func SendFragmented(targetConn net.Conn, payload []byte, parsed ParsedTLS, strat
 		}
 		_, err := targetConn.Write(payload[1:])
 		return err
+
+	case StrategySplit1:
+		fallthrough
 	default:
-		splitAt = 1
-	}
-
-	if splitAt >= len(payload) {
-		splitAt = 1
-	}
-
-	if err := writeSegment(targetConn, payload[:splitAt], 2*time.Millisecond); err != nil {
+		if err := writeSegment(targetConn, payload[:1], 2*time.Millisecond); err != nil {
+			return err
+		}
+		_, err := targetConn.Write(payload[1:])
 		return err
 	}
-	_, err := targetConn.Write(payload[splitAt:])
-	return err
 }
 
 func writeSegment(conn net.Conn, chunk []byte, delay time.Duration) error {

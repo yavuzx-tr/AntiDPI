@@ -16,6 +16,7 @@ var (
 	procRegOpenKeyExW        = modAdvapi32.NewProc("RegOpenKeyExW")
 	procRegQueryValueExW     = modAdvapi32.NewProc("RegQueryValueExW")
 	procRegSetValueExW       = modAdvapi32.NewProc("RegSetValueExW")
+	procRegDeleteValueW      = modAdvapi32.NewProc("RegDeleteValueW")
 	procRegCloseKey          = modAdvapi32.NewProc("RegCloseKey")
 	procCheckTokenMembership = modAdvapi32.NewProc("CheckTokenMembership")
 	modDnsapi                = syscall.NewLazyDLL("dnsapi.dll")
@@ -113,8 +114,8 @@ func EnableSystemProxy(proxyAddr string) error {
 		uintptr(len(serverVal)*2),
 	)
 
-	// Set ProxyOverride (bypass local and direct Roblox routes)
-	overrideVal, _ := syscall.UTF16FromString("<-loopback>;<local>;localhost;127.*;10.*;192.168.*;*.roblox.com;roblox.com;*.rbxcdn.com;rbxcdn.com")
+	// Set ProxyOverride (bypass local loopback and LAN networks)
+	overrideVal, _ := syscall.UTF16FromString("<-loopback>;<local>;localhost;127.*;10.*;192.168.*")
 	overrideName, _ := syscall.UTF16PtrFromString("ProxyOverride")
 	procRegSetValueExW.Call(
 		hKey,
@@ -126,6 +127,7 @@ func EnableSystemProxy(proxyAddr string) error {
 	)
 
 	notifyWinINet()
+	enableEnvProxy("http://" + proxyAddr)
 	return nil
 }
 
@@ -170,6 +172,95 @@ func DisableSystemProxy() {
 	)
 
 	notifyWinINet()
+	disableEnvProxy()
+}
+
+func enableEnvProxy(proxyURL string) {
+	subKey, _ := syscall.UTF16PtrFromString(`Environment`)
+	var hKey uintptr
+	r, _, _ := procRegOpenKeyExW.Call(
+		uintptr(HKEY_CURRENT_USER),
+		uintptr(unsafe.Pointer(subKey)),
+		0,
+		uintptr(KEY_WRITE),
+		uintptr(unsafe.Pointer(&hKey)),
+	)
+	if r != 0 {
+		return
+	}
+	defer procRegCloseKey.Call(hKey)
+
+	vars := []string{"ALL_PROXY", "HTTPS_PROXY", "HTTP_PROXY", "all_proxy", "https_proxy", "http_proxy"}
+	val, _ := syscall.UTF16FromString(proxyURL)
+	for _, v := range vars {
+		vName, _ := syscall.UTF16PtrFromString(v)
+		procRegSetValueExW.Call(
+			hKey,
+			uintptr(unsafe.Pointer(vName)),
+			0,
+			uintptr(REG_SZ),
+			uintptr(unsafe.Pointer(&val[0])),
+			uintptr(len(val)*2),
+		)
+	}
+
+	noProxyVal, _ := syscall.UTF16FromString("localhost,127.0.0.1")
+	npName, _ := syscall.UTF16PtrFromString("NO_PROXY")
+	procRegSetValueExW.Call(
+		hKey,
+		uintptr(unsafe.Pointer(npName)),
+		0,
+		uintptr(REG_SZ),
+		uintptr(unsafe.Pointer(&noProxyVal[0])),
+		uintptr(len(noProxyVal)*2),
+	)
+
+	broadcastSettingChange()
+}
+
+func disableEnvProxy() {
+	subKey, _ := syscall.UTF16PtrFromString(`Environment`)
+	var hKey uintptr
+	r, _, _ := procRegOpenKeyExW.Call(
+		uintptr(HKEY_CURRENT_USER),
+		uintptr(unsafe.Pointer(subKey)),
+		0,
+		uintptr(KEY_WRITE),
+		uintptr(unsafe.Pointer(&hKey)),
+	)
+	if r != 0 {
+		return
+	}
+	defer procRegCloseKey.Call(hKey)
+
+	vars := []string{"ALL_PROXY", "HTTPS_PROXY", "HTTP_PROXY", "all_proxy", "https_proxy", "http_proxy", "NO_PROXY"}
+	for _, v := range vars {
+		vName, _ := syscall.UTF16PtrFromString(v)
+		procRegDeleteValueW.Call(hKey, uintptr(unsafe.Pointer(vName)))
+	}
+
+	broadcastSettingChange()
+}
+
+func broadcastSettingChange() {
+	user32 := syscall.NewLazyDLL("user32.dll")
+	sendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+	envStr, _ := syscall.UTF16PtrFromString("Environment")
+	var result uintptr
+	sendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(envStr)),
+		uintptr(SMTO_ABORTIFHUNG),
+		500,
+		uintptr(unsafe.Pointer(&result)),
+	)
 }
 
 func saveCurrentProxySettings() {
@@ -219,18 +310,39 @@ const robloxBlockHeader = "# --- ANTIDPI ROBLOX BYPASS START ---"
 const robloxBlockFooter = "# --- ANTIDPI ROBLOX BYPASS END ---"
 
 var robloxHostsEntries = []string{
-	"128.116.5.3 roblox.com",
-	"128.116.5.3 www.roblox.com",
-	"128.116.31.3 apis.roblox.com",
-	"128.116.31.3 ecsv2.roblox.com",
-	"128.116.31.3 realtime-signalr.roblox.com",
-	"128.116.31.3 notifications.roblox.com",
-	"99.84.91.31 clientsettingscdn.roblox.com",
-	"99.84.91.31 clientsettings.roblox.com",
-	"128.116.5.3 gamejoin.roblox.com",
-	"128.116.31.3 assetgame.roblox.com",
-	"128.116.5.3 versioncompatibility.api.roblox.com",
-	"2.16.16.154 setup.rbxcdn.com",
+	"127.0.0.1 roblox.com",
+	"127.0.0.1 www.roblox.com",
+	"127.0.0.1 apis.roblox.com",
+	"127.0.0.1 auth.roblox.com",
+	"127.0.0.1 users.roblox.com",
+	"127.0.0.1 ecsv2.roblox.com",
+	"127.0.0.1 realtime-signalr.roblox.com",
+	"127.0.0.1 notifications.roblox.com",
+	"127.0.0.1 clientsettingscdn.roblox.com",
+	"127.0.0.1 clientsettings.roblox.com",
+	"127.0.0.1 gamejoin.roblox.com",
+	"127.0.0.1 assetgame.roblox.com",
+	"127.0.0.1 versioncompatibility.api.roblox.com",
+	"127.0.0.1 setup.rbxcdn.com",
+	"127.0.0.1 contentstore.roblox.com",
+	"127.0.0.1 locale.roblox.com",
+	"127.0.0.1 voice.roblox.com",
+	"127.0.0.1 thumbnails.roblox.com",
+	"127.0.0.1 avatar.roblox.com",
+	"127.0.0.1 games.roblox.com",
+	"127.0.0.1 presence.roblox.com",
+	"127.0.0.1 friends.roblox.com",
+	"127.0.0.1 assetdelivery.roblox.com",
+	"127.0.0.1 contentdelivery.roblox.com",
+	"127.0.0.1 privatemessages.roblox.com",
+	"127.0.0.1 contacts.roblox.com",
+	"127.0.0.1 metrics.roblox.com",
+	"127.0.0.1 chat.roblox.com",
+	"127.0.0.1 groups.roblox.com",
+	"127.0.0.1 economy.roblox.com",
+	"127.0.0.1 inventory.roblox.com",
+	"127.0.0.1 develop.roblox.com",
+	"127.0.0.1 badges.roblox.com",
 }
 
 // EnableRobloxHosts injects direct unblocked Roblox IPs into Windows hosts file to bypass ISP DNS sinkholes

@@ -12,9 +12,9 @@ if %ERRORLEVEL% neq 0 (
 
 :MENU
 cls
-title AntiDPI Final - Settings & Autostart
+title AntiDPI 2.0 - Settings & Autostart
 echo ===================================================================
-echo                 AntiDPI Final - Settings
+echo                 AntiDPI 2.0 - Settings & Autostart
 echo ===================================================================
 echo.
 echo   [1] Enable Windows Autostart (Start automatically on system logon)

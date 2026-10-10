@@ -41,7 +41,7 @@ func probeEndpoints(proxyAddr string) {
 	}
 
 	targets := []string{
-		"https://1.1.1.1",
+		"https://clientsettingscdn.roblox.com/v2/settings/application/PCDesktopClient",
 		"https://www.cloudflare.com",
 	}
 

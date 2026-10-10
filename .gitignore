@@ -1,7 +1,8 @@
 # Binaries
 *.exe
-!antidpi.exe
-*.exe~
+!bin/antidpi.exe
+*.old.exe
+*.new.exe
 *.dll
 *.so
 *.dylib

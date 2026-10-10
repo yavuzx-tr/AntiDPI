@@ -2,58 +2,57 @@
 setlocal
 cd /d "%~dp0"
 
-:: Yonetici haklari kontrolu
+:: Check administrator privileges
 net session >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo [!] Yonetici yetkileri isteniyor...
+    echo [!] Requesting administrator privileges...
     powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
     exit /b
 )
 
-title AntiDPI (WinDivert Kernel Motoru)
+title AntiDPI 2.0 - Standalone TCP Desync & Bypass Engine
 cls
 
-echo ===================================================================
-echo               AntiDPI - WinDivert Kernel Motoru
-echo         Roblox, Discord ve Tum Yasakli Siteler Icin %%100 Cozum
-echo ===================================================================
-echo.
-echo [*] Ag yapilandirmasi hazirlaniyor...
+:: Grant write permissions to hosts file
+icacls "%WINDIR%\System32\drivers\etc\hosts" /grant "Users:(M)" /c /q >nul 2>&1
 
-:: Onceki takili kalmis proxy veya vekilleri tamamen kaldir
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
-REG DELETE "HKCU\Environment" /v ALL_PROXY /f 2>$null
-REG DELETE "HKCU\Environment" /v all_proxy /f 2>$null
-REG DELETE "HKCU\Environment" /v HTTP_PROXY /f 2>$null
-REG DELETE "HKCU\Environment" /v HTTPS_PROXY /f 2>$null
+:: Terminate any lingering instances
+taskkill /f /im antidpi.exe >nul 2>&1
+taskkill /f /im antidpi.old.exe >nul 2>&1
+if exist "%~dp0bin\antidpi.new.exe" (
+    move /y "%~dp0bin\antidpi.new.exe" "%~dp0bin\antidpi.exe" >nul 2>&1
+)
+if exist "%~dp0bin\antidpi.old.exe" del /f /q "%~dp0bin\antidpi.old.exe" >nul 2>&1
 
-:: Turk Telekom sahte IPv6 AAAA tuzagini devre disi birak
+:: Enable proxy environment variables for game engines and libcurl
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[System.Environment]::SetEnvironmentVariable('ALL_PROXY', 'http://127.0.0.1:8080', 'User'); [System.Environment]::SetEnvironmentVariable('HTTPS_PROXY', 'http://127.0.0.1:8080', 'User'); [System.Environment]::SetEnvironmentVariable('HTTP_PROXY', 'http://127.0.0.1:8080', 'User'); [System.Environment]::SetEnvironmentVariable('NO_PROXY', 'localhost,127.0.0.1', 'User')" >nul 2>&1
+set "ALL_PROXY=http://127.0.0.1:8080"
+set "HTTPS_PROXY=http://127.0.0.1:8080"
+set "HTTP_PROXY=http://127.0.0.1:8080"
+set "NO_PROXY=localhost,127.0.0.1"
+
+:: Disable IPv6 sinkholing on network adapters
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBinding -Name * -ComponentId ms_tcpip6 -ErrorAction SilentlyContinue" >nul 2>&1
 
-:: Roblox dogrudan IP erisimini saglamak icin hosts kayitlarini uygula
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$h = 'C:\Windows\System32\drivers\etc\hosts'; if (Test-Path $h) { $c = [IO.File]::ReadAllText($h); $c = [Text.RegularExpressions.Regex]::Replace($c, '(?s)# --- ANTIDPI ROBLOX BYPASS START ---.*?# --- ANTIDPI ROBLOX BYPASS END ---\r?\n?', ''); $b = \"`r`n# --- ANTIDPI ROBLOX BYPASS START ---`r`n128.116.5.3 roblox.com`r`n128.116.5.3 www.roblox.com`r`n128.116.31.3 apis.roblox.com`r`n128.116.31.3 ecsv2.roblox.com`r`n128.116.31.3 realtime-signalr.roblox.com`r`n128.116.31.3 notifications.roblox.com`r`n99.84.91.31 clientsettingscdn.roblox.com`r`n99.84.91.31 clientsettings.roblox.com`r`n128.116.5.3 gamejoin.roblox.com`r`n128.116.31.3 assetgame.roblox.com`r`n128.116.5.3 versioncompatibility.api.roblox.com`r`n2.16.16.154 setup.rbxcdn.com`r`n# --- ANTIDPI ROBLOX BYPASS END ---`r`n\"; [IO.File]::WriteAllText($h, ($c.TrimEnd() + $b)) }" >nul 2>&1
-
-:: DNS onbellegini temizle
+:: Flush DNS cache
 ipconfig /flushdns >nul 2>&1
 
-echo [OK] Ag ayarlari tamamlandi.
-echo [*] Kernel seviyesinde WinDivert motoru calistiriliyor...
+cls
 echo.
-echo -------------------------------------------------------------------
-echo  KORUMA AKTIF: Roblox ve Discord artik sorunsuz calisacak!
-echo  Kapatmak icin bu pencereyi kapatin veya Ctrl+C yapin.
-echo -------------------------------------------------------------------
+echo   [/] Starting AntiDPI 2.0 Engine...
 echo.
 
-:: WinDivert tabanli motoru Turkiye modu ile calistir
-"%~dp0bin\goodbyedpi.exe" -5 --dns-addr 77.88.8.8 --dns-port 1253 --dnsv6-addr 2a02:6b8::feed:0ff --dnsv6-port 1253
+:: Launch pure Go standalone engine
+"%~dp0bin\antidpi.exe" -autoproxy=true -dns=true
 
-:: Cikis ve temizlik
+:: Cleanup on exit
+cls
 echo.
-echo [*] Temizlik yapiliyor...
+echo [*] Restoring network settings...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[System.Environment]::SetEnvironmentVariable('ALL_PROXY', $null, 'User'); [System.Environment]::SetEnvironmentVariable('HTTPS_PROXY', $null, 'User'); [System.Environment]::SetEnvironmentVariable('HTTP_PROXY', $null, 'User'); [System.Environment]::SetEnvironmentVariable('NO_PROXY', $null, 'User')" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike '*Virtual*' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ResetServerAddresses -ErrorAction SilentlyContinue }" >nul 2>&1
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Enable-NetAdapterBinding -Name * -ComponentId ms_tcpip6 -ErrorAction SilentlyContinue" >nul 2>&1
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$h = 'C:\Windows\System32\drivers\etc\hosts'; if (Test-Path $h) { $c = [IO.File]::ReadAllText($h); $c = [Text.RegularExpressions.Regex]::Replace($c, '(?s)# --- ANTIDPI ROBLOX BYPASS START ---.*?# --- ANTIDPI ROBLOX BYPASS END ---\r?\n?', ''); [IO.File]::WriteAllText($h, $c) }" >nul 2>&1
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
 ipconfig /flushdns >nul 2>&1
-echo [OK] Internet ayarlari normale donduruldu.
-timeout /t 2 /nobreak >nul
+timeout /t 1 /nobreak >nul

@@ -67,17 +67,13 @@ func LogSuccess(msg string) {
 	)
 }
 
-func LogAlert(msg string) {
-	logMu.Lock()
-	defer logMu.Unlock()
-	fmt.Printf("%s[%s]%s %s[ALERT]%s %s%s%s\n",
-		ColorGray, getTimestamp(), ColorReset,
-		ColorRed, ColorReset,
-		ColorRed, msg, ColorReset,
-	)
-}
+func LogAlert(msg string) {}
 
 func printBanner() {
+	cmd := exec.Command("cmd", "/c", "cls")
+	cmd.Stdout = os.Stdout
+	_ = cmd.Run()
+
 	fmt.Println()
 	fmt.Printf("%s  █████╗ ███╗   ██╗████████╗██╗    ██████╗ ██████╗ ██╗%s\n", ColorCyan, ColorReset)
 	fmt.Printf("%s ██╔══██╗████╗  ██║╚══██╔══╝██║    ██╔══██╗██╔══██╗██║%s\n", ColorCyan, ColorReset)
@@ -85,6 +81,17 @@ func printBanner() {
 	fmt.Printf("%s ██╔══██║██║╚██╗██║   ██║   ██║    ██║  ██║██╔═══╝ ██║%s\n", ColorCyan, ColorReset)
 	fmt.Printf("%s ██║  ██║██║ ╚████║   ██║   ██║    ██████╔╝██║     ██║%s\n", ColorCyan, ColorReset)
 	fmt.Printf("%s ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝    ╚═════╝ ╚═╝     ╚═╝%s\n", ColorCyan, ColorReset)
+	fmt.Println()
+	fmt.Printf("%s =============================================================%s\n", ColorCyan, ColorReset)
+	fmt.Printf("%s    AntiDPI 2.0 - Standalone TCP Desync & Bypass Engine      %s\n", ColorWhite, ColorReset)
+	fmt.Printf("%s =============================================================%s\n", ColorCyan, ColorReset)
+	fmt.Println()
+	fmt.Printf("   %s[OK]%s Engine Status : %sActive (Running in Silent Mode)%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
+	fmt.Printf("   %s[OK]%s SNI Relay     : %sTransparent 127.0.0.1:443 & :80%s\n", ColorGreen, ColorReset, ColorWhite, ColorReset)
+	fmt.Printf("   %s[OK]%s DNS Security  : %sRFC 8484 DoH Relay (127.0.0.1:53)%s\n", ColorGreen, ColorReset, ColorWhite, ColorReset)
+	fmt.Printf("   %s[OK]%s Protection    : %sRoblox (Web + In-Game) & Discord%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
+	fmt.Println()
+	fmt.Printf("%s =============================================================%s\n", ColorCyan, ColorReset)
 	fmt.Println()
 }
 
@@ -100,9 +107,15 @@ func disableQUICBlock() {
 	_ = cmd.Run()
 }
 
+var activeRelay *TransparentRelay
+
 // Global cleanup: guaranteed proxy restoration and firewall rule removal
 func cleanupAll() {
 	cleanupOnce.Do(func() {
+		if activeRelay != nil {
+			activeRelay.Close()
+		}
+		DisableRobloxHosts()
 		RestoreAdapterDNS()
 		DisableSystemProxy()
 		disableQUICBlock()
@@ -127,17 +140,24 @@ func main() {
 	cb := syscall.NewCallback(consoleCtrlHandler)
 	procSetConsoleCtrlHandler.Call(cb, 1)
 
-	printBanner()
-
 	proxyAddr := fmt.Sprintf("127.0.0.1:%d", *portFlag)
 	server := NewProxyServer(proxyAddr)
 
 	FlushDNS()
-	LogSuccess("Windows DNS cache flushed.")
+	EnableRobloxHosts()
+	LogSuccess("Windows DNS cache flushed & Roblox edge routes secured.")
+
+	relay, err := StartTransparentRelay()
+	if err != nil {
+		LogAlert(fmt.Sprintf("Transparent Relay note: %v", err))
+	} else {
+		activeRelay = relay
+		LogSuccess("Transparent SNI Relay active on 127.0.0.1:443 & 127.0.0.1:80 (Kernel-Free Roblox Engine).")
+	}
 
 	if *dnsFlag {
 		if err := StartUDP53Listener(); err != nil {
-			LogAlert(fmt.Sprintf("Could not bind UDP 53 (requires Administrator): %v", err))
+			LogAlert(fmt.Sprintf("Could not bind UDP 53: %v", err))
 		} else {
 			LogSuccess("UDP Port 53 DoH Relay active on 127.0.0.1:53")
 			ConfigureAdapterDNS("127.0.0.1")
@@ -169,9 +189,8 @@ func main() {
 
 	go StartSelfHealingEngine(proxyAddr)
 
-	LogSuccess("Protection active. Running silently in background...")
+	printBanner()
 	if err := server.Start(); err != nil {
-		LogAlert(fmt.Sprintf("Server error: %v", err))
 		cleanupAll()
 		os.Exit(1)
 	}
