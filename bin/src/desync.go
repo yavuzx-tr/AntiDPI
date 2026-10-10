@@ -245,7 +245,7 @@ func SendFragmented(targetConn net.Conn, payload []byte, parsed ParsedTLS, strat
 		splitAt = 1
 	}
 
-	if err := writeSegment(targetConn, payload[:splitAt], 3*time.Millisecond); err != nil {
+	if err := writeSegment(targetConn, payload[:splitAt], 15*time.Millisecond); err != nil {
 		return err
 	}
 	_, err := targetConn.Write(payload[splitAt:])

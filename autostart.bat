@@ -64,6 +64,8 @@ goto MENU
 :RESET
 cls
 echo [*] Resetting Windows Proxy and DNS Settings to default...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Enable-NetAdapterBinding -Name * -ComponentId ms_tcpip6 -ErrorAction SilentlyContinue" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$h = 'C:\Windows\System32\drivers\etc\hosts'; if (Test-Path $h) { $c = [IO.File]::ReadAllText($h); $c = [Text.RegularExpressions.Regex]::Replace($c, '(?s)# --- ANTIDPI ROBLOX BYPASS START ---.*?# --- ANTIDPI ROBLOX BYPASS END ---\r?\n?', ''); [IO.File]::WriteAllText($h, $c) }" >nul 2>&1
 for /f "tokens=4*" %%a in ('netsh interface show interface ^| findstr "Connected"') do netsh interface ip set dns name="%%b" dhcp >nul 2>&1
 ipconfig /flushdns >nul 2>&1
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1

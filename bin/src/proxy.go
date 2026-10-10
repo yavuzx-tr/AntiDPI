@@ -96,7 +96,7 @@ func (s *ProxyServer) handleHTTPConnect(clientConn net.Conn, br *bufio.Reader) {
 	}
 
 	// Read initial payload from client
-	initialBuf := make([]byte, 4096)
+	initialBuf := make([]byte, 16384)
 	_ = clientConn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	n, err := br.Read(initialBuf)
 	_ = clientConn.SetReadDeadline(time.Time{})
@@ -126,7 +126,8 @@ func (s *ProxyServer) handleHTTPConnect(clientConn net.Conn, br *bufio.Reader) {
 		targetHost = parsed.SNI
 	}
 
-	if parsed.IsClientHello && ShouldBypassDPI(targetHost) {
+	isTLS := (n >= 5 && payload[0] == 0x16)
+	if (parsed.IsClientHello || isTLS) && ShouldBypassDPI(targetHost) {
 		statsBypassed.Add(1)
 		LogBypass(targetHost, strat.String())
 		if err := SendFragmented(targetConn, payload, parsed, strat); err != nil {
@@ -245,7 +246,7 @@ func (s *ProxyServer) handleSOCKS5(clientConn net.Conn, br *bufio.Reader) {
 		return
 	}
 
-	initialBuf := make([]byte, 4096)
+	initialBuf := make([]byte, 16384)
 	_ = clientConn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	n, err := br.Read(initialBuf)
 	_ = clientConn.SetReadDeadline(time.Time{})
@@ -274,7 +275,8 @@ func (s *ProxyServer) handleSOCKS5(clientConn net.Conn, br *bufio.Reader) {
 		targetDisplay = parsed.SNI
 	}
 
-	if parsed.IsClientHello && ShouldBypassDPI(targetDisplay) {
+	isTLS := (n >= 5 && payload[0] == 0x16)
+	if (parsed.IsClientHello || isTLS) && ShouldBypassDPI(targetDisplay) {
 		statsBypassed.Add(1)
 		LogBypass(targetDisplay, strat.String())
 		if err := SendFragmented(targetConn, payload, parsed, strat); err != nil {

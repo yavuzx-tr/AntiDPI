@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -212,20 +214,90 @@ func notifyWinINet() {
 	procInternetSetOptionW.Call(0, uintptr(INTERNET_OPTION_REFRESH), 0, 0)
 }
 
-// ConfigureAdapterDNS sets connected network adapters' DNS to the local DoH relay
+const hostsPath = `C:\Windows\System32\drivers\etc\hosts`
+const robloxBlockHeader = "# --- ANTIDPI ROBLOX BYPASS START ---"
+const robloxBlockFooter = "# --- ANTIDPI ROBLOX BYPASS END ---"
+
+var robloxHostsEntries = []string{
+	"128.116.5.3 roblox.com",
+	"128.116.5.3 www.roblox.com",
+	"128.116.31.3 apis.roblox.com",
+	"128.116.31.3 ecsv2.roblox.com",
+	"128.116.31.3 realtime-signalr.roblox.com",
+	"128.116.31.3 notifications.roblox.com",
+	"128.116.5.3 gamejoin.roblox.com",
+	"128.116.31.3 assetgame.roblox.com",
+	"128.116.5.3 versioncompatibility.api.roblox.com",
+}
+
+// EnableRobloxHosts injects direct unblocked Roblox IPs into Windows hosts file to bypass ISP DNS sinkholes
+func EnableRobloxHosts() {
+	content, err := os.ReadFile(hostsPath)
+	if err != nil {
+		return
+	}
+	text := cleanHostsText(string(content))
+
+	var sb strings.Builder
+	sb.WriteString(strings.TrimRight(text, "\r\n"))
+	sb.WriteString("\r\n\r\n")
+	sb.WriteString(robloxBlockHeader)
+	sb.WriteString("\r\n")
+	for _, entry := range robloxHostsEntries {
+		sb.WriteString(entry)
+		sb.WriteString("\r\n")
+	}
+	sb.WriteString(robloxBlockFooter)
+	sb.WriteString("\r\n")
+
+	_ = os.WriteFile(hostsPath, []byte(sb.String()), 0644)
+	FlushDNS()
+}
+
+// DisableRobloxHosts removes injected Roblox IPs from Windows hosts file
+func DisableRobloxHosts() {
+	content, err := os.ReadFile(hostsPath)
+	if err != nil {
+		return
+	}
+	cleaned := cleanHostsText(string(content))
+	_ = os.WriteFile(hostsPath, []byte(cleaned), 0644)
+	FlushDNS()
+}
+
+func cleanHostsText(text string) string {
+	startIdx := strings.Index(text, robloxBlockHeader)
+	if startIdx == -1 {
+		return text
+	}
+	endIdx := strings.Index(text, robloxBlockFooter)
+	if endIdx == -1 {
+		return text[:startIdx]
+	}
+	endIdx += len(robloxBlockFooter)
+	return strings.TrimRight(text[:startIdx], "\r\n") + "\r\n" + strings.TrimLeft(text[endIdx:], "\r\n")
+}
+
+// ConfigureAdapterDNS sets connected network adapters' DNS to the local DoH relay and disables IPv6 sinkholing
 func ConfigureAdapterDNS(dnsIP string) {
+	// Disable IPv6 on adapters to prevent ISP fake AAAA sinkhole poisoning
+	_ = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "Disable-NetAdapterBinding -Name * -ComponentId ms_tcpip6 -ErrorAction SilentlyContinue").Run()
+
 	psCmd := fmt.Sprintf("Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike '*Virtual*' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ServerAddresses '%s' }", dnsIP)
 	_ = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", psCmd).Run()
 	_ = exec.Command("netsh", "interface", "ip", "set", "dns", "name=Wi-Fi", "static", dnsIP).Run()
 	_ = exec.Command("netsh", "interface", "ip", "set", "dns", "name=Ethernet", "static", dnsIP).Run()
+	EnableRobloxHosts()
 	FlushDNS()
 }
 
-// RestoreAdapterDNS resets connected network adapters' DNS to DHCP
+// RestoreAdapterDNS resets connected network adapters' DNS to DHCP and restores IPv6
 func RestoreAdapterDNS() {
+	DisableRobloxHosts()
 	psCmd := "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike '*Virtual*' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ResetServerAddresses }"
 	_ = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", psCmd).Run()
 	_ = exec.Command("netsh", "interface", "ip", "set", "dns", "name=Wi-Fi", "dhcp").Run()
 	_ = exec.Command("netsh", "interface", "ip", "set", "dns", "name=Ethernet", "dhcp").Run()
+	_ = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "Enable-NetAdapterBinding -Name * -ComponentId ms_tcpip6 -ErrorAction SilentlyContinue").Run()
 	FlushDNS()
 }
