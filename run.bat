@@ -19,7 +19,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBindin
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike '*Virtual*' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ServerAddresses '127.0.0.1' }" >nul 2>&1
 netsh interface ip set dns name="Wi-Fi" static 127.0.0.1 >nul 2>&1
 netsh interface ip set dns name="Ethernet" static 127.0.0.1 >nul 2>&1
-ipconfig /flushdns >nul 2>&1
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyOverride /t REG_SZ /d "<-loopback>;<local>;localhost;127.*;10.*;192.168.*;*.roblox.com;roblox.com;*.rbxcdn.com;rbxcdn.com" /f >nul 2>&1
 
 "%~dp0bin\antidpi.exe" -dns
 

@@ -113,8 +113,8 @@ func EnableSystemProxy(proxyAddr string) error {
 		uintptr(len(serverVal)*2),
 	)
 
-	// Set ProxyOverride
-	overrideVal, _ := syscall.UTF16FromString("<-loopback>;<local>;localhost;127.*;10.*;192.168.*")
+	// Set ProxyOverride (bypass local and direct Roblox routes)
+	overrideVal, _ := syscall.UTF16FromString("<-loopback>;<local>;localhost;127.*;10.*;192.168.*;*.roblox.com;roblox.com;*.rbxcdn.com;rbxcdn.com")
 	overrideName, _ := syscall.UTF16PtrFromString("ProxyOverride")
 	procRegSetValueExW.Call(
 		hKey,
