@@ -103,6 +103,7 @@ func disableQUICBlock() {
 // Global cleanup: guaranteed proxy restoration and firewall rule removal
 func cleanupAll() {
 	cleanupOnce.Do(func() {
+		RestoreAdapterDNS()
 		DisableSystemProxy()
 		disableQUICBlock()
 	})
@@ -139,6 +140,8 @@ func main() {
 			LogAlert(fmt.Sprintf("Could not bind UDP 53 (requires Administrator): %v", err))
 		} else {
 			LogSuccess("UDP Port 53 DoH Relay active on 127.0.0.1:53")
+			ConfigureAdapterDNS("127.0.0.1")
+			LogSuccess("System DNS mapped to 127.0.0.1 (DoH).")
 		}
 	}
 

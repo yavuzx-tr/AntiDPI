@@ -165,6 +165,10 @@ func (s *ProxyServer) handlePlainHTTP(clientConn net.Conn, br *bufio.Reader, req
 	statsDirect.Add(1)
 	LogDirect(host)
 
+	// Normalize request for origin server forwarding
+	req.RequestURI = ""
+	req.Header.Del("Proxy-Connection")
+
 	if err := req.Write(targetConn); err != nil {
 		return
 	}

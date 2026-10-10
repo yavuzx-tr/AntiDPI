@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 	"syscall"
 	"unsafe"
 )
@@ -209,4 +210,18 @@ func saveCurrentProxySettings() {
 func notifyWinINet() {
 	procInternetSetOptionW.Call(0, uintptr(INTERNET_OPTION_SETTINGS_CHANGED), 0, 0)
 	procInternetSetOptionW.Call(0, uintptr(INTERNET_OPTION_REFRESH), 0, 0)
+}
+
+// ConfigureAdapterDNS sets connected network adapters' DNS to the local DoH relay
+func ConfigureAdapterDNS(dnsIP string) {
+	cmd := exec.Command("cmd", "/c", fmt.Sprintf("for /f \"tokens=4*\" %%a in ('netsh interface show interface ^| findstr \"Connected\"') do netsh interface ip set dns name=\"%%b\" static %s", dnsIP))
+	_ = cmd.Run()
+	FlushDNS()
+}
+
+// RestoreAdapterDNS resets connected network adapters' DNS to DHCP
+func RestoreAdapterDNS() {
+	cmd := exec.Command("cmd", "/c", "for /f \"tokens=4*\" %%a in ('netsh interface show interface ^| findstr \"Connected\"') do netsh interface ip set dns name=\"%%b\" dhcp")
+	_ = cmd.Run()
+	FlushDNS()
 }
