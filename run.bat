@@ -19,6 +19,8 @@ icacls "%WINDIR%\System32\drivers\etc\hosts" /grant "Users:(M)" /c /q >nul 2>&1
 :: Terminate any lingering instances
 taskkill /f /im antidpi.exe >nul 2>&1
 taskkill /f /im antidpi.old.exe >nul 2>&1
+taskkill /f /im RobloxPlayerBeta.exe >nul 2>&1
+taskkill /f /im RobloxCrashHandler.exe >nul 2>&1
 if exist "%~dp0bin\antidpi.new.exe" (
     move /y "%~dp0bin\antidpi.new.exe" "%~dp0bin\antidpi.exe" >nul 2>&1
 )
