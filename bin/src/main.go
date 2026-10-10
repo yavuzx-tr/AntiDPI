@@ -83,7 +83,7 @@ func printBanner() {
 	fmt.Printf("%s ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝    ╚═════╝ ╚═╝     ╚═╝%s\n", ColorCyan, ColorReset)
 	fmt.Println()
 	fmt.Printf("%s =============================================================%s\n", ColorCyan, ColorReset)
-	fmt.Printf("%s    AntiDPI 2.0 - Standalone TCP Desync & Bypass Engine      %s\n", ColorWhite, ColorReset)
+	fmt.Printf("%s      AntiDPI - Standalone TCP Desync & Bypass Engine        %s\n", ColorWhite, ColorReset)
 	fmt.Printf("%s =============================================================%s\n", ColorCyan, ColorReset)
 	fmt.Println()
 	fmt.Printf("   %s[OK]%s Engine Status : %sActive (Running in Silent Mode)%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)

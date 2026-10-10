@@ -33,7 +33,7 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v2.0.0" }
+          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.0" }
           $zipName = "AntiDPI-${tag}-windows-x64.zip"
           $dist = "dist_pkg"
           New-Item -ItemType Directory -Path "$dist/bin" -Force | Out-Null
@@ -51,14 +51,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = "${{ github.ref_name }}"
-          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v2.0.0" }
+          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.0" }
           $zipFile = Get-Item AntiDPI-*-windows-x64.zip | Select-Object -First 1 -ExpandProperty FullName
           $exeFile = Get-Item bin/antidpi.exe | Select-Object -First 1 -ExpandProperty FullName
 
-          $releaseNotes = @"
-          ## AntiDPI 2.0 - Standalone TCP Desync & Bypass Engine
+          # Remove old v2.0.0 release if present
+          try {
+            gh release delete v2.0.0 --yes --cleanup-tag
+          } catch {
+            Write-Host "No v2.0.0 release to clean up"
+          }
 
-          ### What's New in 2.0:
+          $releaseNotes = @"
+          ## AntiDPI $tag - Standalone TCP Desync & Bypass Engine
+
+          ### Features:
           - **100% Pure Go Standalone Engine:** Zero kernel drivers, zero WinDivert, zero GoodbyeDPI, zero VPN/SSH tunnels.
           - **Root-Domain Exact Desync:** Slices outgoing TLS ClientHello records across the root domain string (splits between `rob` and `lox.com`), preventing middlebox regex identification and TCP RST drops.
           - **Full Roblox Support:** Web authentication, asset streaming (`assetdelivery.roblox.com`), universe endpoints (`apis.roblox.com`), and in-game server joining (`gamejoin.roblox.com`) with zero Error 529 or Error 0.
@@ -74,5 +81,5 @@ jobs:
           "@
 
           gh release create $tag $zipFile $exeFile `
-            --title "AntiDPI 2.0 - Standalone TCP Desync & Bypass Engine" `
+            --title "AntiDPI $tag - Standalone TCP Desync & Bypass Engine" `
             --notes $releaseNotes

@@ -10,7 +10,7 @@ if %ERRORLEVEL% neq 0 (
     exit /b
 )
 
-title AntiDPI 2.0 - Standalone TCP Desync & Bypass Engine
+title AntiDPI - Standalone TCP Desync & Bypass Engine
 cls
 
 :: Grant write permissions to hosts file
@@ -41,7 +41,7 @@ ipconfig /flushdns >nul 2>&1
 
 cls
 echo.
-echo   [/] Starting AntiDPI 2.0 Engine...
+echo   [/] Starting AntiDPI Engine...
 echo.
 
 :: Launch pure Go standalone engine
