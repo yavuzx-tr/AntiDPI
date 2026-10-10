@@ -1,0 +1,78 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          check-latest: true
+
+      - name: Compile Standalone Engine
+        run: |
+          cd bin/src
+          go build -trimpath -ldflags "-s -w" -o ../antidpi.exe .
+
+      - name: Package Release ZIP
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v2.0.0" }
+          $zipName = "AntiDPI-${tag}-windows-x64.zip"
+          $dist = "dist_pkg"
+          New-Item -ItemType Directory -Path "$dist/bin" -Force | Out-Null
+          Copy-Item "bin/antidpi.exe" -Destination "$dist/bin/antidpi.exe"
+          Copy-Item "run.bat" -Destination "$dist/run.bat"
+          Copy-Item "autostart.bat" -Destination "$dist/autostart.bat"
+          Copy-Item "README.md" -Destination "$dist/README.md"
+          Copy-Item "LICENSE" -Destination "$dist/LICENSE"
+          Compress-Archive -Path "$dist/*" -DestinationPath $zipName -Force
+          Write-Host "Created archive: $zipName"
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v2.0.0" }
+          $zipFile = Get-Item AntiDPI-*-windows-x64.zip | Select-Object -First 1 -ExpandProperty FullName
+          $exeFile = Get-Item bin/antidpi.exe | Select-Object -First 1 -ExpandProperty FullName
+
+          $releaseNotes = @"
+          ## AntiDPI 2.0 - Standalone TCP Desync & Bypass Engine
+
+          ### What's New in 2.0:
+          - **100% Pure Go Standalone Engine:** Zero kernel drivers, zero WinDivert, zero GoodbyeDPI, zero VPN/SSH tunnels.
+          - **Root-Domain Exact Desync:** Slices outgoing TLS ClientHello records across the root domain string (splits between `rob` and `lox.com`), preventing middlebox regex identification and TCP RST drops.
+          - **Full Roblox Support:** Web authentication, asset streaming (`assetdelivery.roblox.com`), universe endpoints (`apis.roblox.com`), and in-game server joining (`gamejoin.roblox.com`) with zero Error 529 or Error 0.
+          - **Transparent SNI Relay:** Kernel-free loopback routing on `127.0.0.1:443` & `127.0.0.1:80`.
+          - **RFC 8484 Secure DoH Relay:** Built-in DNS resolver preventing ISP sinkhole and AAAA poisoning.
+          - **Clean Minimal Console UI:** English status output with giant ASCII logo banner and silent background mode.
+
+          ### Quick Start:
+          1. Download `AntiDPI-$tag-windows-x64.zip` below.
+          2. Extract the archive to any folder.
+          3. Right-click `run.bat` and select **Run as Administrator**.
+          4. Open Roblox and enjoy!
+          "@
+
+          gh release create $tag $zipFile $exeFile `
+            --title "AntiDPI 2.0 - Standalone TCP Desync & Bypass Engine" `
+            --notes $releaseNotes

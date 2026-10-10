@@ -2,6 +2,11 @@
 
 > **Lightweight, Driverless TCP Desync & Censorship Circumvention Engine for Windows**
 
+[![GitHub Release](https://img.shields.io/github/v/release/yavuzx-tr/AntiDPI?style=for-the-badge&color=blue)](https://github.com/yavuzx-tr/AntiDPI/releases/latest)
+[![Download Latest](https://img.shields.io/badge/Download-AntiDPI%202.0%20(ZIP)-brightgreen?style=for-the-badge&logo=windows)](https://github.com/yavuzx-tr/AntiDPI/releases/latest)
+
+[**📦 Download Latest Release (AntiDPI-v2.0.0-windows-x64.zip)**](https://github.com/yavuzx-tr/AntiDPI/releases/latest)
+
 AntiDPI 2.0 is a standalone, kernel-free Deep Packet Inspection (DPI) bypass utility designed specifically for Windows. It circumvents ISP-level censorship and stateful packet inspection middleboxes without requiring kernel-mode packet filtering drivers (WinDivert, Npcap), virtual network adapters, VPNs, or external proxy tunnels.
 
 ---
