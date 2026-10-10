@@ -88,8 +88,7 @@ func printBanner() {
 	fmt.Println()
 	fmt.Printf("   %s[OK]%s Engine Status : %sActive (Running in Silent Mode)%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
 	fmt.Printf("   %s[OK]%s SNI Relay     : %sTransparent 127.0.0.1:443 & :80%s\n", ColorGreen, ColorReset, ColorWhite, ColorReset)
-	fmt.Printf("   %s[OK]%s DNS Security  : %sRFC 8484 DoH Relay (127.0.0.1:53)%s\n", ColorGreen, ColorReset, ColorWhite, ColorReset)
-	fmt.Printf("   %s[OK]%s Protection    : %sGlobal Middlebox & DPI Circumvention%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
+	fmt.Printf("   %s[OK]%s Protection    : %sRoblox & Discord (Zero-Risk Transparent Mode)%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
 	fmt.Println()
 	fmt.Printf("%s =============================================================%s\n", ColorCyan, ColorReset)
 	fmt.Println()
@@ -115,7 +114,7 @@ func cleanupAll() {
 		if activeRelay != nil {
 			activeRelay.Close()
 		}
-		DisableRobloxHosts()
+		DisableHosts()
 		RestoreAdapterDNS()
 		DisableSystemProxy()
 		disableQUICBlock()
@@ -132,7 +131,7 @@ func main() {
 	initConsole()
 
 	portFlag := flag.Int("port", 8080, "Local proxy port")
-	autoProxy := flag.Bool("autoproxy", true, "Configure Windows WinINet system proxy")
+	autoProxy := flag.Bool("autoproxy", false, "Configure Windows WinINet system proxy")
 	dnsFlag := flag.Bool("dns", false, "Enable UDP Port 53 DoH relay on 127.0.0.1:53")
 	flag.Parse()
 
@@ -144,15 +143,15 @@ func main() {
 	server := NewProxyServer(proxyAddr)
 
 	FlushDNS()
-	EnableRobloxHosts()
-	LogSuccess("Windows DNS cache flushed & Roblox edge routes secured.")
+	EnableHosts()
+	LogSuccess("Windows DNS cache flushed & edge routes secured (Roblox & Discord).")
 
 	relay, err := StartTransparentRelay()
 	if err != nil {
 		LogAlert(fmt.Sprintf("Transparent Relay note: %v", err))
 	} else {
 		activeRelay = relay
-		LogSuccess("Transparent SNI Relay active on 127.0.0.1:443 & 127.0.0.1:80 (Kernel-Free Roblox Engine).")
+		LogSuccess("Transparent SNI Relay active on 127.0.0.1:443 & 127.0.0.1:80.")
 	}
 
 	if *dnsFlag {

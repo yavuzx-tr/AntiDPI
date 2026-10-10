@@ -39,7 +39,8 @@ var (
 		"https://8.8.8.8/resolve",
 	}
 
-	pinnedRobloxHosts = map[string][]string{
+	pinnedHosts = map[string][]string{
+		// Roblox Core
 		"roblox.com":                          {"128.116.5.3"},
 		"www.roblox.com":                      {"128.116.5.3"},
 		"apis.roblox.com":                     {"128.116.5.3"},
@@ -76,7 +77,27 @@ var (
 		"accountsettings.roblox.com":          {"128.116.5.3"},
 		"ephemeralcounters.api.roblox.com":    {"128.116.5.3"},
 		"gameinternationalization.roblox.com": {"128.116.5.3"},
+
+		// Discord Core (Cloudflare Anycast Edges)
+		"discord.com":                         {"162.159.138.232", "162.159.137.232", "162.159.136.232", "162.159.135.232"},
+		"www.discord.com":                     {"162.159.138.232", "162.159.137.232"},
+		"canary.discord.com":                  {"162.159.138.232", "162.159.137.232"},
+		"ptb.discord.com":                     {"162.159.138.232", "162.159.137.232"},
+		"discordapp.com":                      {"162.159.138.232", "162.159.137.232"},
+		"www.discordapp.com":                  {"162.159.138.232", "162.159.137.232"},
+		"gateway.discord.gg":                  {"162.159.133.234", "162.159.134.234", "162.159.135.234", "162.159.136.234"},
+		"cdn.discordapp.com":                  {"162.159.130.233", "162.159.133.233", "162.159.134.233", "162.159.135.233"},
+		"media.discordapp.net":                {"162.159.138.232", "162.159.137.232"},
+		"images-ext-1.discordapp.net":         {"162.159.138.232", "162.159.137.232"},
+		"images-ext-2.discordapp.net":         {"162.159.138.232", "162.159.137.232"},
+		"status.discord.com":                  {"162.159.138.232", "162.159.137.232"},
+		"router.discordapp.net":               {"162.159.138.232", "162.159.137.232"},
+		"updates.discord.com":                 {"162.159.138.232", "162.159.137.232"},
+		"dl.discordapp.net":                   {"162.159.138.232", "162.159.137.232"},
+		"discord.gg":                          {"162.159.138.232", "162.159.137.232"},
+		"discord.media":                       {"162.159.138.232", "162.159.137.232"},
 	}
+	pinnedRobloxHosts = pinnedHosts
 )
 
 func init() {
@@ -224,10 +245,16 @@ func GetCandidateIPs(host string) []string {
 		result = append(result, emb)
 	}
 
-	if pinned, ok := pinnedRobloxHosts[lowerHost]; ok && len(pinned) > 0 {
+	if pinned, ok := pinnedHosts[lowerHost]; ok && len(pinned) > 0 {
 		result = append(result, pinned...)
 	} else if strings.HasSuffix(lowerHost, ".roblox.com") {
 		result = append(result, "128.116.5.3")
+	} else if strings.HasSuffix(lowerHost, ".discord.com") ||
+		strings.HasSuffix(lowerHost, ".discordapp.com") ||
+		strings.HasSuffix(lowerHost, ".discord.gg") ||
+		strings.HasSuffix(lowerHost, ".discordapp.net") ||
+		strings.HasSuffix(lowerHost, ".discord.media") {
+		result = append(result, "162.159.138.232", "162.159.137.232")
 	}
 
 	ips, err := ResolveAllSecure(host)
@@ -245,8 +272,25 @@ func GetCandidateIPs(host string) []string {
 			}
 		}
 	}
+
+	// Filter out loopback IPs and ISP sinkholes so relay never dials itself or blocked page
+	var filtered []string
+	for _, ip := range result {
+		if ip == "127.0.0.1" || ip == "::1" || ip == "localhost" || strings.HasPrefix(ip, "195.175.") {
+			continue
+		}
+		filtered = append(filtered, ip)
+	}
+	result = filtered
+
 	if len(result) == 0 {
-		result = append(result, host)
+		if strings.Contains(lowerHost, "discord") {
+			result = append(result, "162.159.138.232")
+		} else if strings.Contains(lowerHost, "roblox") {
+			result = append(result, "128.116.5.3")
+		} else {
+			result = append(result, host)
+		}
 	}
 	return result
 }
@@ -324,9 +368,23 @@ func buildLocalNODATAResponse(queryData []byte, qEnd int) []byte {
 	return buf.Bytes()
 }
 
+func isLocalBypassDomain(qName string) bool {
+	q := strings.ToLower(strings.TrimSuffix(qName, "."))
+	if q == "roblox.com" || strings.HasSuffix(q, ".roblox.com") ||
+		q == "rbxcdn.com" || strings.HasSuffix(q, ".rbxcdn.com") ||
+		q == "discord.com" || strings.HasSuffix(q, ".discord.com") ||
+		q == "discordapp.com" || strings.HasSuffix(q, ".discordapp.com") ||
+		q == "discord.gg" || strings.HasSuffix(q, ".discord.gg") ||
+		q == "discordapp.net" || strings.HasSuffix(q, ".discordapp.net") ||
+		q == "discord.media" || strings.HasSuffix(q, ".discord.media") {
+		return true
+	}
+	return false
+}
+
 func handleRawDNSQuery(conn *net.UDPConn, clientAddr *net.UDPAddr, queryData []byte) {
 	if qName, qEnd, qType, ok := parseDNSQueryName(queryData); ok {
-		if qName == "roblox.com" || strings.HasSuffix(qName, ".roblox.com") {
+		if isLocalBypassDomain(qName) {
 			if qType == 1 { // IPv4 A record query
 				resp := buildLocalAResponse(queryData, qEnd)
 				_, _ = conn.WriteToUDP(resp, clientAddr)
@@ -339,27 +397,30 @@ func handleRawDNSQuery(conn *net.UDPConn, clientAddr *net.UDPAddr, queryData []b
 		}
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "https://1.1.1.1/dns-query", bytes.NewReader(queryData))
-	if err != nil {
+	for _, endpoint := range dohServers {
+		req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(queryData))
+		if err != nil {
+			continue
+		}
+		req.Header.Set("Content-Type", "application/dns-message")
+		req.Header.Set("Accept", "application/dns-message")
+
+		resp, err := dohClient.Do(req)
+		if err != nil {
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			continue
+		}
+
+		respData, err := io.ReadAll(resp.Body)
+		if err != nil || len(respData) == 0 {
+			continue
+		}
+
+		_, _ = conn.WriteToUDP(respData, clientAddr)
 		return
 	}
-	req.Header.Set("Content-Type", "application/dns-message")
-	req.Header.Set("Accept", "application/dns-message")
-
-	resp, err := dohClient.Do(req)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return
-	}
-
-	respData, err := io.ReadAll(resp.Body)
-	if err != nil || len(respData) == 0 {
-		return
-	}
-
-	_, _ = conn.WriteToUDP(respData, clientAddr)
 }

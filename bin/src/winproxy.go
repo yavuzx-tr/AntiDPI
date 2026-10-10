@@ -306,10 +306,13 @@ func notifyWinINet() {
 }
 
 const hostsPath = `C:\Windows\System32\drivers\etc\hosts`
-const robloxBlockHeader = "# --- ANTIDPI ROBLOX BYPASS START ---"
-const robloxBlockFooter = "# --- ANTIDPI ROBLOX BYPASS END ---"
+const antidpiBlockHeader = "# --- ANTIDPI BYPASS START ---"
+const antidpiBlockFooter = "# --- ANTIDPI BYPASS END ---"
+const legacyRobloxBlockHeader = "# --- ANTIDPI ROBLOX BYPASS START ---"
+const legacyRobloxBlockFooter = "# --- ANTIDPI ROBLOX BYPASS END ---"
 
-var robloxHostsEntries = []string{
+var hostsEntries = []string{
+	// Roblox Web & Client
 	"127.0.0.1 roblox.com",
 	"127.0.0.1 www.roblox.com",
 	"127.0.0.1 apis.roblox.com",
@@ -346,10 +349,29 @@ var robloxHostsEntries = []string{
 	"127.0.0.1 accountsettings.roblox.com",
 	"127.0.0.1 ephemeralcounters.api.roblox.com",
 	"127.0.0.1 gameinternationalization.roblox.com",
+
+	// Discord Web, Client & Gateway
+	"127.0.0.1 discord.com",
+	"127.0.0.1 www.discord.com",
+	"127.0.0.1 canary.discord.com",
+	"127.0.0.1 ptb.discord.com",
+	"127.0.0.1 discordapp.com",
+	"127.0.0.1 www.discordapp.com",
+	"127.0.0.1 gateway.discord.gg",
+	"127.0.0.1 cdn.discordapp.com",
+	"127.0.0.1 media.discordapp.net",
+	"127.0.0.1 images-ext-1.discordapp.net",
+	"127.0.0.1 images-ext-2.discordapp.net",
+	"127.0.0.1 status.discord.com",
+	"127.0.0.1 router.discordapp.net",
+	"127.0.0.1 updates.discord.com",
+	"127.0.0.1 dl.discordapp.net",
+	"127.0.0.1 discord.gg",
+	"127.0.0.1 discord.media",
 }
 
-// EnableRobloxHosts injects direct unblocked Roblox IPs into Windows hosts file to bypass ISP DNS sinkholes
-func EnableRobloxHosts() {
+// EnableHosts injects direct unblocked Roblox and Discord IPs into Windows hosts file to bypass ISP DNS sinkholes
+func EnableHosts() {
 	content, err := os.ReadFile(hostsPath)
 	if err != nil {
 		return
@@ -359,21 +381,21 @@ func EnableRobloxHosts() {
 	var sb strings.Builder
 	sb.WriteString(strings.TrimRight(text, "\r\n"))
 	sb.WriteString("\r\n\r\n")
-	sb.WriteString(robloxBlockHeader)
+	sb.WriteString(antidpiBlockHeader)
 	sb.WriteString("\r\n")
-	for _, entry := range robloxHostsEntries {
+	for _, entry := range hostsEntries {
 		sb.WriteString(entry)
 		sb.WriteString("\r\n")
 	}
-	sb.WriteString(robloxBlockFooter)
+	sb.WriteString(antidpiBlockFooter)
 	sb.WriteString("\r\n")
 
 	_ = os.WriteFile(hostsPath, []byte(sb.String()), 0644)
 	FlushDNS()
 }
 
-// DisableRobloxHosts removes injected Roblox IPs from Windows hosts file
-func DisableRobloxHosts() {
+// DisableHosts removes injected Roblox and Discord IPs from Windows hosts file
+func DisableHosts() {
 	content, err := os.ReadFile(hostsPath)
 	if err != nil {
 		return
@@ -383,17 +405,26 @@ func DisableRobloxHosts() {
 	FlushDNS()
 }
 
-func cleanHostsText(text string) string {
-	startIdx := strings.Index(text, robloxBlockHeader)
+func EnableRobloxHosts()  { EnableHosts() }
+func DisableRobloxHosts() { DisableHosts() }
+
+func cleanBlock(text, header, footer string) string {
+	startIdx := strings.Index(text, header)
 	if startIdx == -1 {
 		return text
 	}
-	endIdx := strings.Index(text, robloxBlockFooter)
+	endIdx := strings.Index(text, footer)
 	if endIdx == -1 {
 		return text[:startIdx]
 	}
-	endIdx += len(robloxBlockFooter)
+	endIdx += len(footer)
 	return strings.TrimRight(text[:startIdx], "\r\n") + "\r\n" + strings.TrimLeft(text[endIdx:], "\r\n")
+}
+
+func cleanHostsText(text string) string {
+	text = cleanBlock(text, antidpiBlockHeader, antidpiBlockFooter)
+	text = cleanBlock(text, legacyRobloxBlockHeader, legacyRobloxBlockFooter)
+	return text
 }
 
 // ConfigureAdapterDNS sets connected network adapters' DNS to the local DoH relay and disables IPv6 sinkholing

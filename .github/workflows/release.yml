@@ -39,6 +39,7 @@ jobs:
           New-Item -ItemType Directory -Path "$dist/bin" -Force | Out-Null
           Copy-Item "bin/antidpi.exe" -Destination "$dist/bin/antidpi.exe"
           Copy-Item "run.bat" -Destination "$dist/run.bat"
+          Copy-Item "reset.bat" -Destination "$dist/reset.bat"
           Copy-Item "autostart.bat" -Destination "$dist/autostart.bat"
           Copy-Item "README.md" -Destination "$dist/README.md"
           Copy-Item "LICENSE" -Destination "$dist/LICENSE"
@@ -51,34 +52,33 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = "${{ github.ref_name }}"
-          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.0" }
+          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.1" }
           $zipFile = Get-Item AntiDPI-*-windows-x64.zip | Select-Object -First 1 -ExpandProperty FullName
           $exeFile = Get-Item bin/antidpi.exe | Select-Object -First 1 -ExpandProperty FullName
-
-          # Remove old v2.0.0 release if present
-          try {
-            gh release delete v2.0.0 --yes --cleanup-tag
-          } catch {
-            Write-Host "No v2.0.0 release to clean up"
-          }
 
           $releaseNotes = @"
           ## AntiDPI $tag - Standalone TCP Desync & Bypass Engine
 
-          ### Features:
-          - **100% Pure Go Standalone Engine:** Zero kernel drivers, zero WinDivert, zero GoodbyeDPI, zero VPN/SSH tunnels.
-          - **Root-Domain Exact Desync:** Slices outgoing TLS ClientHello records across the root domain string (splits between `rob` and `lox.com`), preventing middlebox regex identification and TCP RST drops.
-          - **Full Roblox Support:** Web authentication, asset streaming (`assetdelivery.roblox.com`), universe endpoints (`apis.roblox.com`), and in-game server joining (`gamejoin.roblox.com`) with zero Error 529 or Error 0.
-          - **Transparent SNI Relay:** Kernel-free loopback routing on `127.0.0.1:443` & `127.0.0.1:80`.
-          - **RFC 8484 Secure DoH Relay:** Built-in DNS resolver preventing ISP sinkhole and AAAA poisoning.
-          - **Clean Minimal Console UI:** English status output with giant ASCII logo banner and silent background mode.
+          ### What's New in $tag:
+          - **Zero-Risk Transparent Mode:** Removed all system-wide proxy hijacking and persistent registry environment variables. General internet traffic (Google, YouTube, other games) is 100% untouched and safe.
+          - **Full Discord Support:** Added complete Cloudflare Anycast edge pinning and root-domain ClientHello desynchronization for Discord desktop app, gateway (`gateway.discord.gg`), assets (`cdn.discordapp.com`), and voice signaling.
+          - **Full Roblox Support:** Web authentication, asset streaming, and in-game server joining.
+          - **Instant Emergency Reset:** Bundled `reset.bat` for one-click factory reset of all network and hosts settings.
+          - **Crash-Resilient Hosts Management:** Clean restoration on exit with backward-compatible block scrubbing.
 
           ### Quick Start:
           1. Download `AntiDPI-$tag-windows-x64.zip` below.
           2. Extract the archive to any folder.
           3. Right-click `run.bat` and select **Run as Administrator**.
-          4. Open Roblox and enjoy!
+          4. Open Roblox or Discord and enjoy!
           "@
+
+          # Delete existing tag release if re-running
+          try {
+            gh release delete $tag --yes --cleanup-tag
+          } catch {
+            Write-Host "No existing release for $tag to clean up"
+          }
 
           gh release create $tag $zipFile $exeFile `
             --title "AntiDPI $tag - Standalone TCP Desync & Bypass Engine" `

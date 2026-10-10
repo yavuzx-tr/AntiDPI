@@ -234,9 +234,12 @@ func SendFragmented(targetConn net.Conn, payload []byte, parsed ParsedTLS, strat
 	}
 
 	if idx == -1 {
-		found := bytes.Index(payload, []byte("roblox.com"))
-		if found > 0 && found+3 < len(payload) {
-			idx = found + 3
+		for _, target := range []string{"roblox.com", "discord.com", "discord.gg", "discordapp.com"} {
+			found := bytes.Index(payload, []byte(target))
+			if found > 0 && found+3 < len(payload) {
+				idx = found + 3
+				break
+			}
 		}
 	}
 

@@ -16,45 +16,42 @@ cls
 :: Grant write permissions to hosts file
 icacls "%WINDIR%\System32\drivers\etc\hosts" /grant "Users:(M)" /c /q >nul 2>&1
 
-:: Terminate any lingering instances
+:: Clean any stale environment variables from previous versions
+reg delete "HKCU\Environment" /v HTTP_PROXY /f >nul 2>&1
+reg delete "HKCU\Environment" /v HTTPS_PROXY /f >nul 2>&1
+reg delete "HKCU\Environment" /v ALL_PROXY /f >nul 2>&1
+reg delete "HKCU\Environment" /v NO_PROXY /f >nul 2>&1
+
+:: Terminate any lingering instances of antidpi and game/voice clients
 taskkill /f /im antidpi.exe >nul 2>&1
 taskkill /f /im antidpi.old.exe >nul 2>&1
 taskkill /f /im RobloxPlayerBeta.exe >nul 2>&1
 taskkill /f /im RobloxCrashHandler.exe >nul 2>&1
+taskkill /f /im Discord.exe >nul 2>&1
+taskkill /f /im DiscordCanary.exe >nul 2>&1
+taskkill /f /im DiscordPTB.exe >nul 2>&1
+taskkill /f /im Update.exe >nul 2>&1
 if exist "%~dp0bin\antidpi.new.exe" (
     move /y "%~dp0bin\antidpi.new.exe" "%~dp0bin\antidpi.exe" >nul 2>&1
 )
 if exist "%~dp0bin\antidpi.old.exe" del /f /q "%~dp0bin\antidpi.old.exe" >nul 2>&1
-
-:: Enable proxy environment variables for game engines and libcurl
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[System.Environment]::SetEnvironmentVariable('ALL_PROXY', 'http://127.0.0.1:8080', 'User'); [System.Environment]::SetEnvironmentVariable('HTTPS_PROXY', 'http://127.0.0.1:8080', 'User'); [System.Environment]::SetEnvironmentVariable('HTTP_PROXY', 'http://127.0.0.1:8080', 'User'); [System.Environment]::SetEnvironmentVariable('NO_PROXY', 'localhost,127.0.0.1', 'User')" >nul 2>&1
-set "ALL_PROXY=http://127.0.0.1:8080"
-set "HTTPS_PROXY=http://127.0.0.1:8080"
-set "HTTP_PROXY=http://127.0.0.1:8080"
-set "NO_PROXY=localhost,127.0.0.1"
-
-:: Disable IPv6 sinkholing on network adapters
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBinding -Name * -ComponentId ms_tcpip6 -ErrorAction SilentlyContinue" >nul 2>&1
 
 :: Flush DNS cache
 ipconfig /flushdns >nul 2>&1
 
 cls
 echo.
-echo   [/] Starting AntiDPI Engine...
+echo   [/] Starting AntiDPI Engine (Zero-Risk Transparent Mode)...
 echo.
 
-:: Launch pure Go standalone engine
-"%~dp0bin\antidpi.exe" -autoproxy=true -dns=true
+:: Launch pure Go standalone engine (Surgical transparent routing - No global proxy, no adapter hijack)
+"%~dp0bin\antidpi.exe" -autoproxy=false -dns=false
 
 :: Cleanup on exit
 cls
 echo.
 echo [*] Restoring network settings...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "[System.Environment]::SetEnvironmentVariable('ALL_PROXY', $null, 'User'); [System.Environment]::SetEnvironmentVariable('HTTPS_PROXY', $null, 'User'); [System.Environment]::SetEnvironmentVariable('HTTP_PROXY', $null, 'User'); [System.Environment]::SetEnvironmentVariable('NO_PROXY', $null, 'User')" >nul 2>&1
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -and $_.InterfaceDescription -notlike '*Virtual*' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ResetServerAddresses -ErrorAction SilentlyContinue }" >nul 2>&1
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Enable-NetAdapterBinding -Name * -ComponentId ms_tcpip6 -ErrorAction SilentlyContinue" >nul 2>&1
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = '$env:WINDIR\System32\drivers\etc\hosts'; if (Test-Path $p) { $c = [System.IO.File]::ReadAllText($p); $c = [System.Text.RegularExpressions.Regex]::Replace($c, '(?s)# --- ANTIDPI.*?# --- ANTIDPI.*?END ---[\r\n]*', ''); [System.IO.File]::WriteAllText($p, $c) }" >nul 2>&1
+netsh advfirewall firewall delete rule name=AntiDPI_BlockQUIC >nul 2>&1
 ipconfig /flushdns >nul 2>&1
 timeout /t 1 /nobreak >nul
