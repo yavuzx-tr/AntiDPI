@@ -55,9 +55,10 @@ jobs:
             ## AntiDPI ${{ github.ref_name }} - Standalone TCP Desync & Bypass Engine
 
             ### What's New in ${{ github.ref_name }}:
-            - **Zero-Risk Transparent Mode:** Removed all system-wide proxy hijacking and persistent registry environment variables. General internet traffic (Google, YouTube, other games) is 100% untouched and safe.
-            - **Full Discord Support:** Added complete Cloudflare Anycast edge pinning and root-domain ClientHello desynchronization for Discord desktop app, gateway (`gateway.discord.gg`), assets (`cdn.discordapp.com`), and voice signaling.
-            - **Full Roblox Support:** Web authentication, asset streaming, and in-game server joining.
+            - **Full Roblox Avatar & 3D Thumbnail Support:** Fixed `https://www.roblox.com/my/avatar` and 3D avatar preview. Added `tr.rbxcdn.com`, `c0..c7.rbxcdn.com` (character meshes & 3D clothing), `t0..t7.rbxcdn.com`, `catalog.roblox.com`, and `itemconfiguration.roblox.com`.
+            - **Reliable Game Joins (Zero "Retry" Popups):** Added `matchmaking.roblox.com` and increased connection & ServerHello handshake timeouts to 4000ms to eliminate game join drops on high-latency routes.
+            - **Zero-Risk Transparent Mode:** No global proxy, no adapter DNS hijacking, no persistent registry tampering.
+            - **Discord Desktop & WebRTC Bypass:** Continuous unblocked Cloudflare edge routing for gateway, voice signaling, and app updates.
             - **Instant Emergency Reset:** Bundled `reset.bat` for one-click factory reset of all network and hosts settings.
             - **Crash-Resilient Hosts Management:** Clean restoration on exit with backward-compatible block scrubbing.
 

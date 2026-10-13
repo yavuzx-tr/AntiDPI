@@ -79,10 +79,10 @@ var (
 		"gameinternationalization.roblox.com": {"128.116.5.3"},
 
 		// Roblox Catalog, Item Configuration & Matchmaking
-		"catalog.roblox.com":                  {"128.116.5.3"},
-		"itemconfiguration.roblox.com":        {"128.116.5.3"},
-		"itemconfiguration.api.roblox.com":    {"128.116.5.3"},
-		"matchmaking.roblox.com":              {"128.116.5.3"},
+		"catalog.roblox.com":                  {"128.116.13.3", "128.116.5.3"},
+		"itemconfiguration.roblox.com":        {"128.116.13.3", "128.116.5.3"},
+		"itemconfiguration.api.roblox.com":    {"128.116.13.3", "128.116.5.3"},
+		"matchmaking.roblox.com":              {"128.116.13.3", "128.116.5.3"},
 		"client-telemetry.roblox.com":         {"128.116.5.3"},
 		"trades.roblox.com":                   {"128.116.5.3"},
 		"premiumfeatures.roblox.com":          {"128.116.5.3"},
