@@ -149,7 +149,7 @@ func (s *ProxyServer) dialAndConnectTLS(targetHost, port string, payload []byte,
 
 	for _, ip := range candidateIPs {
 		addr := net.JoinHostPort(ip, port)
-		targetConn, err := net.DialTimeout("tcp", addr, 2500*time.Millisecond)
+		targetConn, err := net.DialTimeout("tcp", addr, 4000*time.Millisecond)
 		if err != nil {
 			lastErr = err
 			continue
@@ -165,8 +165,8 @@ func (s *ProxyServer) dialAndConnectTLS(targetHost, port string, payload []byte,
 			continue
 		}
 
-		// Wait up to 2500ms for initial server response (TLS ServerHello)
-		_ = targetConn.SetReadDeadline(time.Now().Add(2500 * time.Millisecond))
+		// Wait up to 4000ms for initial server response (TLS ServerHello)
+		_ = targetConn.SetReadDeadline(time.Now().Add(4000 * time.Millisecond))
 		respBuf := make([]byte, 16384)
 		nr, err := targetConn.Read(respBuf)
 		_ = targetConn.SetReadDeadline(time.Time{})

@@ -78,6 +78,43 @@ var (
 		"ephemeralcounters.api.roblox.com":    {"128.116.5.3"},
 		"gameinternationalization.roblox.com": {"128.116.5.3"},
 
+		// Roblox Catalog, Item Configuration & Matchmaking
+		"catalog.roblox.com":                  {"128.116.5.3"},
+		"itemconfiguration.roblox.com":        {"128.116.5.3"},
+		"itemconfiguration.api.roblox.com":    {"128.116.5.3"},
+		"matchmaking.roblox.com":              {"128.116.5.3"},
+		"client-telemetry.roblox.com":         {"128.116.5.3"},
+		"trades.roblox.com":                   {"128.116.5.3"},
+		"premiumfeatures.roblox.com":          {"128.116.5.3"},
+		"translations.roblox.com":             {"128.116.5.3"},
+		"followings.roblox.com":               {"128.116.5.3"},
+		"engagement.roblox.com":               {"128.116.5.3"},
+		"private-messages.roblox.com":         {"128.116.5.3"},
+		"share.roblox.com":                    {"128.116.5.3"},
+
+		// Roblox 3D Avatar Rendering & Asset CDNs
+		"tr.rbxcdn.com":                       {"18.239.255.42", "18.239.255.127", "18.239.255.86", "18.239.255.13"},
+		"images.rbxcdn.com":                   {"65.9.9.117", "18.239.255.42"},
+		"static.rbxcdn.com":                   {"3.169.85.61", "18.239.255.42"},
+		"js.rbxcdn.com":                       {"108.157.52.100", "18.239.255.42"},
+		"css.rbxcdn.com":                      {"3.160.57.45", "18.239.255.42"},
+		"c0.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
+		"c1.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
+		"c2.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
+		"c3.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
+		"c4.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
+		"c5.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
+		"c6.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
+		"c7.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
+		"t0.rbxcdn.com":                       {"65.9.9.110", "18.239.255.42"},
+		"t1.rbxcdn.com":                       {"108.157.60.98", "18.239.255.42"},
+		"t2.rbxcdn.com":                       {"3.160.57.94", "18.239.255.42"},
+		"t3.rbxcdn.com":                       {"65.9.9.36", "18.239.255.42"},
+		"t4.rbxcdn.com":                       {"3.169.85.3", "18.239.255.42"},
+		"t5.rbxcdn.com":                       {"65.9.9.125", "18.239.255.42"},
+		"t6.rbxcdn.com":                       {"13.35.58.53", "18.239.255.42"},
+		"t7.rbxcdn.com":                       {"65.9.9.82", "18.239.255.42"},
+
 		// Discord Core (Cloudflare Anycast Edges)
 		"discord.com":                         {"162.159.138.232", "162.159.137.232", "162.159.136.232", "162.159.135.232"},
 		"www.discord.com":                     {"162.159.138.232", "162.159.137.232"},
@@ -249,6 +286,8 @@ func GetCandidateIPs(host string) []string {
 		result = append(result, pinned...)
 	} else if strings.HasSuffix(lowerHost, ".roblox.com") {
 		result = append(result, "128.116.5.3")
+	} else if strings.HasSuffix(lowerHost, ".rbxcdn.com") {
+		result = append(result, "18.239.255.42", "2.16.16.154")
 	} else if strings.HasSuffix(lowerHost, ".discord.com") ||
 		strings.HasSuffix(lowerHost, ".discordapp.com") ||
 		strings.HasSuffix(lowerHost, ".discord.gg") ||
@@ -286,6 +325,8 @@ func GetCandidateIPs(host string) []string {
 	if len(result) == 0 {
 		if strings.Contains(lowerHost, "discord") {
 			result = append(result, "162.159.138.232")
+		} else if strings.Contains(lowerHost, "rbxcdn") {
+			result = append(result, "18.239.255.42", "2.16.16.154")
 		} else if strings.Contains(lowerHost, "roblox") {
 			result = append(result, "128.116.5.3")
 		} else {
