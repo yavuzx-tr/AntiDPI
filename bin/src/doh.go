@@ -39,100 +39,142 @@ var (
 		"https://8.8.8.8/resolve",
 	}
 
+	robloxApiCluster = []string{
+		"128.116.32.3", "128.116.2.3", "128.116.30.3", "128.116.48.3",
+		"128.116.56.3", "128.116.13.3", "128.116.21.3", "128.116.44.3",
+	}
+	robloxWebCluster = []string{
+		"128.116.13.3", "128.116.32.3", "128.116.2.3", "128.116.30.3",
+		"128.116.48.3", "128.116.56.3",
+	}
+	robloxUsersCluster = []string{
+		"128.116.32.3", "128.116.13.3", "128.116.2.3", "128.116.48.3",
+		"128.116.56.3",
+	}
+	robloxAccountCluster = []string{
+		"128.116.2.3", "128.116.48.3", "128.116.56.3", "128.116.32.3",
+		"128.116.13.3",
+	}
+	robloxClientSettingsCluster = []string{
+		"128.116.30.3", "128.116.48.3", "128.116.56.3", "128.116.32.3",
+		"128.116.13.3",
+	}
+	robloxGameJoinCluster = []string{
+		"128.116.13.3", "128.116.32.3", "128.116.48.3", "128.116.56.3",
+		"128.116.21.3", "128.116.44.3", "128.116.30.3",
+	}
+	robloxThumbnailsCluster = []string{
+		"128.116.5.3", "128.116.2.3", "128.116.21.3", "128.116.31.3",
+		"128.116.13.3", "128.116.32.3",
+	}
+	robloxAvatarCluster = []string{
+		"128.116.13.3", "128.116.32.3", "128.116.2.3", "128.116.30.3",
+		"128.116.48.3", "128.116.56.3",
+	}
+	robloxAssetDeliveryCluster = []string{
+		"128.116.48.3", "128.116.5.3", "128.116.13.3", "128.116.32.3",
+		"128.116.2.3", "128.116.30.3",
+	}
+	robloxVersionCompatibilityCluster = []string{
+		"128.116.2.3", "128.116.5.3", "128.116.13.3", "128.116.21.3",
+		"128.116.31.3", "128.116.48.3", "128.116.56.3",
+	}
+
 	pinnedHosts = map[string][]string{
-		// Roblox Core
-		"roblox.com":                          {"128.116.5.3"},
-		"www.roblox.com":                      {"128.116.5.3"},
-		"apis.roblox.com":                     {"128.116.5.3"},
-		"auth.roblox.com":                     {"104.18.3.63", "104.18.2.63"},
-		"users.roblox.com":                    {"128.116.5.3"},
-		"ecsv2.roblox.com":                    {"128.116.5.3"},
-		"realtime-signalr.roblox.com":         {"128.116.5.3"},
-		"notifications.roblox.com":            {"128.116.5.3"},
-		"gamejoin.roblox.com":                 {"128.116.5.3"},
-		"assetgame.roblox.com":                {"128.116.5.3"},
-		"assetdelivery.roblox.com":            {"128.116.5.3"},
-		"contentdelivery.roblox.com":          {"128.116.5.3"},
-		"privatemessages.roblox.com":          {"128.116.5.3"},
-		"contacts.roblox.com":                 {"128.116.5.3"},
-		"metrics.roblox.com":                  {"128.116.5.3"},
-		"versioncompatibility.api.roblox.com": {"128.116.5.3"},
-		"clientsettings.roblox.com":            {"128.116.5.3"},
-		"clientsettingscdn.roblox.com":         {"99.84.91.31", "18.172.242.85", "18.172.242.109"},
+		// Roblox Core Web & Auth
+		"roblox.com":                          robloxWebCluster,
+		"www.roblox.com":                      robloxWebCluster,
+		"auth.roblox.com":                     {"104.18.2.63", "104.18.3.63"},
+		"accountsettings.roblox.com":          robloxAccountCluster,
+		"accountinformation.roblox.com":      robloxAccountCluster,
+		"users.roblox.com":                    robloxUsersCluster,
+		"apis.roblox.com":                     robloxApiCluster,
+		"ecsv2.roblox.com":                    robloxApiCluster,
+		"realtime-signalr.roblox.com":         robloxApiCluster,
+		"notifications.roblox.com":            robloxApiCluster,
+		"gamejoin.roblox.com":                 robloxGameJoinCluster,
+		"assetgame.roblox.com":                robloxGameJoinCluster,
+		"assetdelivery.roblox.com":            robloxAssetDeliveryCluster,
+		"contentdelivery.roblox.com":          robloxAssetDeliveryCluster,
+		"privatemessages.roblox.com":          robloxUsersCluster,
+		"contacts.roblox.com":                 robloxUsersCluster,
+		"metrics.roblox.com":                  robloxApiCluster,
+		"versioncompatibility.api.roblox.com": robloxVersionCompatibilityCluster,
+		"clientsettings.roblox.com":            robloxClientSettingsCluster,
+		"clientsettingscdn.roblox.com":         {"18.172.242.115", "18.172.242.75", "18.172.242.85", "18.172.242.109"},
 		"setup.rbxcdn.com":                    {"2.16.16.154", "2.16.16.156"},
-		"contentstore.roblox.com":             {"128.116.5.3"},
-		"locale.roblox.com":                   {"128.116.5.3"},
-		"voice.roblox.com":                    {"128.116.5.3"},
-		"thumbnails.roblox.com":               {"128.116.5.3"},
-		"avatar.roblox.com":                   {"128.116.5.3"},
-		"games.roblox.com":                    {"128.116.5.3"},
-		"presence.roblox.com":                 {"128.116.5.3"},
-		"friends.roblox.com":                  {"128.116.5.3"},
-		"chat.roblox.com":                     {"128.116.5.3"},
-		"groups.roblox.com":                   {"128.116.5.3"},
-		"economy.roblox.com":                  {"128.116.5.3"},
-		"inventory.roblox.com":                {"128.116.5.3"},
-		"develop.roblox.com":                  {"128.116.5.3"},
-		"badges.roblox.com":                   {"128.116.5.3"},
-		"accountsettings.roblox.com":          {"128.116.5.3"},
-		"ephemeralcounters.api.roblox.com":    {"128.116.5.3"},
-		"gameinternationalization.roblox.com": {"128.116.5.3"},
+		"contentstore.roblox.com":             robloxAssetDeliveryCluster,
+		"locale.roblox.com":                   robloxWebCluster,
+		"voice.roblox.com":                    robloxApiCluster,
+		"thumbnails.roblox.com":               robloxThumbnailsCluster,
+		"avatar.roblox.com":                   robloxAvatarCluster,
+		"games.roblox.com":                    robloxWebCluster,
+		"presence.roblox.com":                 robloxUsersCluster,
+		"friends.roblox.com":                  robloxUsersCluster,
+		"chat.roblox.com":                     robloxUsersCluster,
+		"groups.roblox.com":                   robloxUsersCluster,
+		"economy.roblox.com":                  robloxAvatarCluster,
+		"inventory.roblox.com":                robloxAvatarCluster,
+		"develop.roblox.com":                  robloxAvatarCluster,
+		"badges.roblox.com":                   robloxAvatarCluster,
+		"ephemeralcounters.api.roblox.com":    robloxApiCluster,
+		"gameinternationalization.roblox.com": robloxApiCluster,
 
 		// Roblox Catalog, Item Configuration & Matchmaking
-		"catalog.roblox.com":                  {"128.116.13.3", "128.116.5.3"},
-		"itemconfiguration.roblox.com":        {"128.116.13.3", "128.116.5.3"},
-		"itemconfiguration.api.roblox.com":    {"128.116.13.3", "128.116.5.3"},
-		"matchmaking.roblox.com":              {"128.116.13.3", "128.116.5.3"},
-		"client-telemetry.roblox.com":         {"128.116.5.3"},
-		"trades.roblox.com":                   {"128.116.5.3"},
-		"premiumfeatures.roblox.com":          {"128.116.5.3"},
-		"translations.roblox.com":             {"128.116.5.3"},
-		"followings.roblox.com":               {"128.116.5.3"},
-		"engagement.roblox.com":               {"128.116.5.3"},
-		"private-messages.roblox.com":         {"128.116.5.3"},
-		"share.roblox.com":                    {"128.116.5.3"},
+		"catalog.roblox.com":               robloxAvatarCluster,
+		"itemconfiguration.roblox.com":     robloxAvatarCluster,
+		"itemconfiguration.api.roblox.com": robloxAvatarCluster,
+		"matchmaking.roblox.com":           robloxGameJoinCluster,
+		"client-telemetry.roblox.com":      robloxApiCluster,
+		"trades.roblox.com":                robloxUsersCluster,
+		"premiumfeatures.roblox.com":       robloxWebCluster,
+		"translations.roblox.com":          robloxWebCluster,
+		"followings.roblox.com":            robloxUsersCluster,
+		"engagement.roblox.com":            robloxApiCluster,
+		"private-messages.roblox.com":      robloxUsersCluster,
+		"share.roblox.com":                 robloxWebCluster,
 
 		// Roblox 3D Avatar Rendering & Asset CDNs
-		"tr.rbxcdn.com":                       {"18.239.255.42", "18.239.255.127", "18.239.255.86", "18.239.255.13"},
-		"images.rbxcdn.com":                   {"65.9.9.117", "18.239.255.42"},
-		"static.rbxcdn.com":                   {"3.169.85.61", "18.239.255.42"},
-		"js.rbxcdn.com":                       {"108.157.52.100", "18.239.255.42"},
-		"css.rbxcdn.com":                      {"3.160.57.45", "18.239.255.42"},
-		"c0.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
-		"c1.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
-		"c2.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
-		"c3.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
-		"c4.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
-		"c5.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
-		"c6.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
-		"c7.rbxcdn.com":                       {"2.22.89.43", "2.16.16.154"},
-		"t0.rbxcdn.com":                       {"65.9.9.110", "18.239.255.42"},
-		"t1.rbxcdn.com":                       {"108.157.60.98", "18.239.255.42"},
-		"t2.rbxcdn.com":                       {"3.160.57.94", "18.239.255.42"},
-		"t3.rbxcdn.com":                       {"65.9.9.36", "18.239.255.42"},
-		"t4.rbxcdn.com":                       {"3.169.85.3", "18.239.255.42"},
-		"t5.rbxcdn.com":                       {"65.9.9.125", "18.239.255.42"},
-		"t6.rbxcdn.com":                       {"13.35.58.53", "18.239.255.42"},
-		"t7.rbxcdn.com":                       {"65.9.9.82", "18.239.255.42"},
+		"tr.rbxcdn.com":               {"18.239.255.42", "18.239.255.127", "18.239.255.86", "18.239.255.13"},
+		"images.rbxcdn.com":           {"65.9.9.117", "18.239.255.42", "18.239.255.127"},
+		"static.rbxcdn.com":           {"3.169.85.61", "18.239.255.42", "18.239.255.127"},
+		"js.rbxcdn.com":               {"108.157.52.100", "18.239.255.42", "18.239.255.127"},
+		"css.rbxcdn.com":              {"3.160.57.45", "18.239.255.42", "18.239.255.127"},
+		"c0.rbxcdn.com":               {"2.22.89.43", "2.16.16.154", "18.239.255.42"},
+		"c1.rbxcdn.com":               {"2.22.89.43", "2.16.16.154", "18.239.255.42"},
+		"c2.rbxcdn.com":               {"2.22.89.43", "2.16.16.154", "18.239.255.42"},
+		"c3.rbxcdn.com":               {"2.22.89.43", "2.16.16.154", "18.239.255.42"},
+		"c4.rbxcdn.com":               {"2.22.89.43", "2.16.16.154", "18.239.255.42"},
+		"c5.rbxcdn.com":               {"2.22.89.43", "2.16.16.154", "18.239.255.42"},
+		"c6.rbxcdn.com":               {"2.22.89.43", "2.16.16.154", "18.239.255.42"},
+		"c7.rbxcdn.com":               {"2.22.89.43", "2.16.16.154", "18.239.255.42"},
+		"t0.rbxcdn.com":               {"65.9.9.110", "18.239.255.42", "18.239.255.127"},
+		"t1.rbxcdn.com":               {"108.157.60.98", "18.239.255.42", "18.239.255.127"},
+		"t2.rbxcdn.com":               {"3.160.57.94", "18.239.255.42", "18.239.255.127"},
+		"t3.rbxcdn.com":               {"65.9.9.36", "18.239.255.42", "18.239.255.127"},
+		"t4.rbxcdn.com":               {"3.169.85.3", "18.239.255.42", "18.239.255.127"},
+		"t5.rbxcdn.com":               {"65.9.9.125", "18.239.255.42", "18.239.255.127"},
+		"t6.rbxcdn.com":               {"13.35.58.53", "18.239.255.42", "18.239.255.127"},
+		"t7.rbxcdn.com":               {"65.9.9.82", "18.239.255.42", "18.239.255.127"},
 
 		// Discord Core (Cloudflare Anycast Edges)
-		"discord.com":                         {"162.159.138.232", "162.159.137.232", "162.159.136.232", "162.159.135.232"},
-		"www.discord.com":                     {"162.159.138.232", "162.159.137.232"},
-		"canary.discord.com":                  {"162.159.138.232", "162.159.137.232"},
-		"ptb.discord.com":                     {"162.159.138.232", "162.159.137.232"},
-		"discordapp.com":                      {"162.159.138.232", "162.159.137.232"},
-		"www.discordapp.com":                  {"162.159.138.232", "162.159.137.232"},
-		"gateway.discord.gg":                  {"162.159.133.234", "162.159.134.234", "162.159.135.234", "162.159.136.234"},
-		"cdn.discordapp.com":                  {"162.159.130.233", "162.159.133.233", "162.159.134.233", "162.159.135.233"},
-		"media.discordapp.net":                {"162.159.138.232", "162.159.137.232"},
-		"images-ext-1.discordapp.net":         {"162.159.138.232", "162.159.137.232"},
-		"images-ext-2.discordapp.net":         {"162.159.138.232", "162.159.137.232"},
-		"status.discord.com":                  {"162.159.138.232", "162.159.137.232"},
-		"router.discordapp.net":               {"162.159.138.232", "162.159.137.232"},
-		"updates.discord.com":                 {"162.159.138.232", "162.159.137.232"},
-		"dl.discordapp.net":                   {"162.159.138.232", "162.159.137.232"},
-		"discord.gg":                          {"162.159.138.232", "162.159.137.232"},
-		"discord.media":                       {"162.159.138.232", "162.159.137.232"},
+		"discord.com":                 {"162.159.138.232", "162.159.137.232", "162.159.136.232", "162.159.135.232"},
+		"www.discord.com":             {"162.159.138.232", "162.159.137.232"},
+		"canary.discord.com":          {"162.159.138.232", "162.159.137.232"},
+		"ptb.discord.com":             {"162.159.138.232", "162.159.137.232"},
+		"discordapp.com":              {"162.159.138.232", "162.159.137.232"},
+		"www.discordapp.com":          {"162.159.138.232", "162.159.137.232"},
+		"gateway.discord.gg":          {"162.159.133.234", "162.159.134.234", "162.159.135.234", "162.159.136.234"},
+		"cdn.discordapp.com":          {"162.159.130.233", "162.159.133.233", "162.159.134.233", "162.159.135.233"},
+		"media.discordapp.net":        {"162.159.138.232", "162.159.137.232"},
+		"images-ext-1.discordapp.net": {"162.159.138.232", "162.159.137.232"},
+		"images-ext-2.discordapp.net": {"162.159.138.232", "162.159.137.232"},
+		"status.discord.com":          {"162.159.138.232", "162.159.137.232"},
+		"router.discordapp.net":       {"162.159.138.232", "162.159.137.232"},
+		"updates.discord.com":         {"162.159.138.232", "162.159.137.232"},
+		"dl.discordapp.net":           {"162.159.138.232", "162.159.137.232"},
+		"discord.gg":                  {"162.159.138.232", "162.159.137.232"},
+		"discord.media":               {"162.159.138.232", "162.159.137.232"},
 	}
 	pinnedRobloxHosts = pinnedHosts
 )
@@ -284,10 +326,10 @@ func GetCandidateIPs(host string) []string {
 
 	if pinned, ok := pinnedHosts[lowerHost]; ok && len(pinned) > 0 {
 		result = append(result, pinned...)
-	} else if strings.HasSuffix(lowerHost, ".roblox.com") {
-		result = append(result, "128.116.5.3")
+	} else if strings.HasSuffix(lowerHost, ".roblox.com") || lowerHost == "roblox.com" {
+		result = append(result, robloxApiCluster...)
 	} else if strings.HasSuffix(lowerHost, ".rbxcdn.com") {
-		result = append(result, "18.239.255.42", "2.16.16.154")
+		result = append(result, "18.239.255.42", "18.239.255.127", "2.16.16.154")
 	} else if strings.HasSuffix(lowerHost, ".discord.com") ||
 		strings.HasSuffix(lowerHost, ".discordapp.com") ||
 		strings.HasSuffix(lowerHost, ".discord.gg") ||
@@ -326,9 +368,9 @@ func GetCandidateIPs(host string) []string {
 		if strings.Contains(lowerHost, "discord") {
 			result = append(result, "162.159.138.232")
 		} else if strings.Contains(lowerHost, "rbxcdn") {
-			result = append(result, "18.239.255.42", "2.16.16.154")
+			result = append(result, "18.239.255.42", "18.239.255.127", "2.16.16.154")
 		} else if strings.Contains(lowerHost, "roblox") {
-			result = append(result, "128.116.5.3")
+			result = append(result, robloxApiCluster...)
 		} else {
 			result = append(result, host)
 		}
@@ -413,6 +455,8 @@ func isLocalBypassDomain(qName string) bool {
 	q := strings.ToLower(strings.TrimSuffix(qName, "."))
 	if q == "roblox.com" || strings.HasSuffix(q, ".roblox.com") ||
 		q == "rbxcdn.com" || strings.HasSuffix(q, ".rbxcdn.com") ||
+		q == "rbx.com" || strings.HasSuffix(q, ".rbx.com") ||
+		q == "robloxlabs.com" || strings.HasSuffix(q, ".robloxlabs.com") ||
 		q == "discord.com" || strings.HasSuffix(q, ".discord.com") ||
 		q == "discordapp.com" || strings.HasSuffix(q, ".discordapp.com") ||
 		q == "discord.gg" || strings.HasSuffix(q, ".discord.gg") ||

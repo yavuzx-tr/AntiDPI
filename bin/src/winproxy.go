@@ -347,6 +347,7 @@ var hostsEntries = []string{
 	"127.0.0.1 develop.roblox.com",
 	"127.0.0.1 badges.roblox.com",
 	"127.0.0.1 accountsettings.roblox.com",
+	"127.0.0.1 accountinformation.roblox.com",
 	"127.0.0.1 ephemeralcounters.api.roblox.com",
 	"127.0.0.1 gameinternationalization.roblox.com",
 

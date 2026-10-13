@@ -118,7 +118,7 @@ func (r *TransparentRelay) handleHTTPSConn(clientConn net.Conn) {
 
 	for _, ip := range candidateIPs {
 		addr := net.JoinHostPort(ip, "443")
-		conn, err := net.DialTimeout("tcp", addr, 4000*time.Millisecond)
+		conn, err := net.DialTimeout("tcp", addr, 2500*time.Millisecond)
 		if err != nil {
 			continue
 		}
@@ -133,7 +133,7 @@ func (r *TransparentRelay) handleHTTPSConn(clientConn net.Conn) {
 		}
 
 		// Verify server response (TLS ServerHello) before committing
-		_ = conn.SetReadDeadline(time.Now().Add(4000 * time.Millisecond))
+		_ = conn.SetReadDeadline(time.Now().Add(2500 * time.Millisecond))
 		respBuf := make([]byte, 16384)
 		nr, err := conn.Read(respBuf)
 		_ = conn.SetReadDeadline(time.Time{})
