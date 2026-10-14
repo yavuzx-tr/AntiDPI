@@ -24,49 +24,77 @@ jobs:
           go-version: '1.22'
           check-latest: true
 
-      - name: Compile Standalone Engine
+      - name: Compile Standalone Engine (Windows & Linux)
         run: |
           cd bin/src
           go build -trimpath -ldflags "-s -w" -o ../antidpi.exe .
+          $env:GOOS="linux"; $env:GOARCH="amd64"; go build -trimpath -ldflags "-s -w" -o ../antidpi_linux .
+          Copy-Item "../antidpi_linux" -Destination "../../antidpi-linux-amd64"
+        shell: pwsh
 
-      - name: Package Release ZIP
+      - name: Package Release Archives (Windows & Linux)
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.0" }
-          $zipName = "AntiDPI-${tag}-windows-x64.zip"
-          $dist = "dist_pkg"
-          New-Item -ItemType Directory -Path "$dist/bin" -Force | Out-Null
-          Copy-Item "bin/antidpi.exe" -Destination "$dist/bin/antidpi.exe"
-          Copy-Item "run.bat" -Destination "$dist/run.bat"
-          Copy-Item "reset.bat" -Destination "$dist/reset.bat"
-          Copy-Item "autostart.bat" -Destination "$dist/autostart.bat"
-          Copy-Item "README.md" -Destination "$dist/README.md"
-          Copy-Item "LICENSE" -Destination "$dist/LICENSE"
-          Compress-Archive -Path "$dist/*" -DestinationPath $zipName -Force
-          Write-Host "Created archive: $zipName"
+          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.2" }
+          
+          # Windows Package
+          $winZipName = "AntiDPI-${tag}-windows-x64.zip"
+          $distWin = "dist_win"
+          New-Item -ItemType Directory -Path "$distWin/bin" -Force | Out-Null
+          Copy-Item "bin/antidpi.exe" -Destination "$distWin/bin/antidpi.exe"
+          Copy-Item "run.bat" -Destination "$distWin/run.bat"
+          Copy-Item "reset.bat" -Destination "$distWin/reset.bat"
+          Copy-Item "autostart.bat" -Destination "$distWin/autostart.bat"
+          Copy-Item "README.md" -Destination "$distWin/README.md"
+          Copy-Item "LICENSE" -Destination "$distWin/LICENSE"
+          Compress-Archive -Path "$distWin/*" -DestinationPath $winZipName -Force
+          Write-Host "Created Windows archive: $winZipName"
+
+          # Linux Package
+          $linuxTarName = "AntiDPI-${tag}-linux-x64.tar.gz"
+          $distLinux = "dist_linux"
+          New-Item -ItemType Directory -Path "$distLinux/bin" -Force | Out-Null
+          Copy-Item "bin/antidpi_linux" -Destination "$distLinux/bin/antidpi"
+          Copy-Item "run.sh" -Destination "$distLinux/run.sh"
+          Copy-Item "reset.sh" -Destination "$distLinux/reset.sh"
+          Copy-Item "README.md" -Destination "$distLinux/README.md"
+          Copy-Item "LICENSE" -Destination "$distLinux/LICENSE"
+          tar -czvf $linuxTarName -C $distLinux .
+          Write-Host "Created Linux archive: $linuxTarName"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: AntiDPI ${{ github.ref_name }} - Standalone TCP Desync & Bypass Engine
+          name: AntiDPI ${{ github.ref_name }} - Windows & Linux TCP Desync & Bypass Engine
           body: |
-            ## AntiDPI ${{ github.ref_name }} - Standalone TCP Desync & Bypass Engine
+            ## AntiDPI ${{ github.ref_name }} - Standalone TCP Desync & Bypass Engine (Windows & Linux)
 
-            ### What's New in ${{ github.ref_name }}:
+            ### Highlights & What's New:
+            - **Native Linux Support:** Full Linux compatibility with zero external dependencies. Verified on Ubuntu / Debian / Oracle Linux. Includes root `run.sh` and emergency `reset.sh`.
             - **Full Roblox Avatar & 3D Thumbnail Support:** Fixed `https://www.roblox.com/my/avatar` and 3D avatar preview. Added `tr.rbxcdn.com`, `c0..c7.rbxcdn.com` (character meshes & 3D clothing), `t0..t7.rbxcdn.com`, `catalog.roblox.com`, and `itemconfiguration.roblox.com`.
             - **Reliable Game Joins (Zero "Retry" Popups):** Added `matchmaking.roblox.com` and increased connection & ServerHello handshake timeouts to 4000ms to eliminate game join drops on high-latency routes.
             - **Zero-Risk Transparent Mode:** No global proxy, no adapter DNS hijacking, no persistent registry tampering.
-            - **Discord Desktop & WebRTC Bypass:** Continuous unblocked Cloudflare edge routing for gateway, voice signaling, and app updates.
-            - **Instant Emergency Reset:** Bundled `reset.bat` for one-click factory reset of all network and hosts settings.
+            - **Discord Desktop & WebRTC Bypass:** Continuous unblocked Cloudflare edge routing for gateway, voice signaling, and app updates (`discord.com`, `support.discord.com`, `gateway.discord.gg`).
+            - **Instant Emergency Reset:** Bundled `reset.bat` (Windows) and `reset.sh` (Linux) for one-click factory reset of all network and hosts settings.
             - **Crash-Resilient Hosts Management:** Clean restoration on exit with backward-compatible block scrubbing.
 
-            ### Quick Start:
+            ### Quick Start (Windows):
             1. Download `AntiDPI-${{ github.ref_name }}-windows-x64.zip` below.
             2. Extract the archive to any folder.
             3. Right-click `run.bat` and select **Run as Administrator**.
             4. Open Roblox or Discord and enjoy!
+
+            ### Quick Start (Linux):
+            1. Download `AntiDPI-${{ github.ref_name }}-linux-x64.tar.gz` below.
+            2. Extract and run with sudo:
+               ```bash
+               tar -xvf AntiDPI-${{ github.ref_name }}-linux-x64.tar.gz
+               sudo ./run.sh
+               ```
           files: |
             AntiDPI-*-windows-x64.zip
             bin/antidpi.exe
+            AntiDPI-*-linux-x64.tar.gz
+            antidpi-linux-amd64

@@ -6,6 +6,11 @@
 *.dll
 *.so
 *.dylib
+*.zip
+*.tar.gz
+antidpi-linux-amd64
+bin/antidpi_linux
+
 
 # Test and coverage artifacts
 *.test

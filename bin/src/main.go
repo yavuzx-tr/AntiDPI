@@ -4,12 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
-	"unsafe"
 )
 
 // ANSI Color Codes
@@ -26,28 +24,6 @@ var (
 	logMu       sync.Mutex
 	cleanupOnce sync.Once
 )
-
-var (
-	kernel32Dll               = syscall.NewLazyDLL("kernel32.dll")
-	procSetConsoleCtrlHandler = kernel32Dll.NewProc("SetConsoleCtrlHandler")
-	procGetStdHandle          = kernel32Dll.NewProc("GetStdHandle")
-	procSetConsoleMode        = kernel32Dll.NewProc("SetConsoleMode")
-	procGetConsoleMode        = kernel32Dll.NewProc("GetConsoleMode")
-)
-
-func initConsole() {
-	const stdOutputHandle = ^uintptr(10) // -11
-	const enableVirtualTerminalProcessing = 0x0004
-
-	hOut, _, _ := procGetStdHandle.Call(stdOutputHandle)
-	if hOut != 0 && hOut != ^uintptr(0) {
-		var mode uint32
-		r, _, _ := procGetConsoleMode.Call(hOut, uintptr(unsafe.Pointer(&mode)))
-		if r != 0 {
-			procSetConsoleMode.Call(hOut, uintptr(mode|enableVirtualTerminalProcessing))
-		}
-	}
-}
 
 func getTimestamp() string {
 	return time.Now().Format("15:04:05")
@@ -70,9 +46,7 @@ func LogSuccess(msg string) {
 func LogAlert(msg string) {}
 
 func printBanner() {
-	cmd := exec.Command("cmd", "/c", "cls")
-	cmd.Stdout = os.Stdout
-	_ = cmd.Run()
+	fmt.Print("\033[H\033[2J")
 
 	fmt.Println()
 	fmt.Printf("%s  █████╗ ███╗   ██╗████████╗██╗    ██████╗ ██████╗ ██╗%s\n", ColorCyan, ColorReset)
@@ -94,18 +68,6 @@ func printBanner() {
 	fmt.Println()
 }
 
-// Block QUIC (UDP 443) via Windows Firewall to force instant HTTP/2 fallback without browser timeouts
-func enableQUICBlock() {
-	cmd := exec.Command("netsh", "advfirewall", "firewall", "add", "rule",
-		"name=AntiDPI_BlockQUIC", "dir=out", "action=block", "protocol=UDP", "remoteport=443")
-	_ = cmd.Run()
-}
-
-func disableQUICBlock() {
-	cmd := exec.Command("netsh", "advfirewall", "firewall", "delete", "rule", "name=AntiDPI_BlockQUIC")
-	_ = cmd.Run()
-}
-
 var activeRelay *TransparentRelay
 
 // Global cleanup: guaranteed proxy restoration and firewall rule removal
@@ -122,12 +84,6 @@ func cleanupAll() {
 	})
 }
 
-// Win32 Console Control Handler for closing via 'X' button or shutdown
-func consoleCtrlHandler(ctrlType uint32) uintptr {
-	cleanupAll()
-	return 1
-}
-
 func main() {
 	initConsole()
 
@@ -137,16 +93,15 @@ func main() {
 	dnsFlag := flag.Bool("dns", false, "Enable UDP Port 53 DoH relay on 127.0.0.1:53")
 	flag.Parse()
 
-	// Register Win32 close handler ('X' button, shutdown, logoff)
-	cb := syscall.NewCallback(consoleCtrlHandler)
-	procSetConsoleCtrlHandler.Call(cb, 1)
+	// Register platform close handler
+	registerPlatformCloseHandler(cleanupAll)
 
 	proxyAddr := fmt.Sprintf("127.0.0.1:%d", *portFlag)
 	server := NewProxyServer(proxyAddr)
 
 	FlushDNS()
 	EnableHosts()
-	LogSuccess("Windows DNS cache flushed & edge routes secured (Roblox & Discord).")
+	LogSuccess("System DNS cache flushed & edge routes secured (Roblox & Discord).")
 
 	relay, err := StartTransparentRelay()
 	if err != nil {
