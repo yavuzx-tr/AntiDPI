@@ -36,7 +36,7 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.3" }
+          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.4" }
           
           # Windows Package
           $winZipName = "AntiDPI-${tag}-windows-x64.zip"
@@ -44,8 +44,10 @@ jobs:
           New-Item -ItemType Directory -Path "$distWin/bin" -Force | Out-Null
           Copy-Item "bin/antidpi.exe" -Destination "$distWin/bin/antidpi.exe"
           Copy-Item "run.bat" -Destination "$distWin/run.bat"
+          Copy-Item "run_silent.vbs" -Destination "$distWin/run_silent.vbs"
           Copy-Item "reset.bat" -Destination "$distWin/reset.bat"
           Copy-Item "autostart.bat" -Destination "$distWin/autostart.bat"
+          Copy-Item "ecosystem.config.js" -Destination "$distWin/ecosystem.config.js"
           Copy-Item "README.md" -Destination "$distWin/README.md"
           Copy-Item "LICENSE" -Destination "$distWin/LICENSE"
           Compress-Archive -Path "$distWin/*" -DestinationPath $winZipName -Force
@@ -57,7 +59,9 @@ jobs:
           New-Item -ItemType Directory -Path "$distLinux/bin" -Force | Out-Null
           Copy-Item "bin/antidpi_linux" -Destination "$distLinux/bin/antidpi"
           Copy-Item "run.sh" -Destination "$distLinux/run.sh"
+          Copy-Item "pm2.sh" -Destination "$distLinux/pm2.sh"
           Copy-Item "reset.sh" -Destination "$distLinux/reset.sh"
+          Copy-Item "ecosystem.config.js" -Destination "$distLinux/ecosystem.config.js"
           Copy-Item "README.md" -Destination "$distLinux/README.md"
           Copy-Item "LICENSE" -Destination "$distLinux/LICENSE"
           tar -czvf $linuxTarName -C $distLinux .
@@ -72,14 +76,13 @@ jobs:
             ## AntiDPI ${{ github.ref_name }} - Standalone TCP Desync & Bypass Engine (Windows & Linux)
 
             ### Highlights & What's New:
+            - **PM2 Background Daemon & Boot Autostart (Linux):** Added `ecosystem.config.js` and `pm2.sh`. Run AntiDPI completely in the background without open terminal windows, with automatic resurrection on system boot/reboot (`pm2 startup`).
+            - **Silent Background Execution & Autostart (Windows):** Added `run_silent.vbs` and updated `autostart.bat` with one-click silent background autostart (no command prompt window on logon).
             - **Discord QR Code Login (Remote Auth) Support:** Full unblocked support for `wss://remote-auth-gateway.discord.gg/?v=2` and remote authentication. Resolves missing/infinite loading QR codes on desktop client login screens.
             - **Expanded Discord Gateway & Media Cluster:** Added `remote-auth-gateway.discord.gg`, `remote-auth.discord.gg`, `qr.discord.gg`, `voice-gateway.discord.gg`, and web app endpoints (`app.discord.com`, `auth.discord.com`, `login.discord.com`).
-            - **Native Linux Support:** Full Linux compatibility with zero external dependencies. Verified on Nobara / Fedora / Ubuntu / Debian / Oracle Linux. Includes root `run.sh` and emergency `reset.sh`.
             - **Full Roblox Avatar & 3D Thumbnail Support:** Character meshes & 3D clothing previews unblocked (`tr.rbxcdn.com`, `c0..c7.rbxcdn.com`, `t0..t7.rbxcdn.com`).
-            - **Reliable Game Joins (Zero "Retry" Popups):** Added `matchmaking.roblox.com` and increased dial timeouts.
             - **Zero-Risk Transparent Mode:** No global proxy hijacking, no persistent registry tampering.
             - **Instant Emergency Reset:** Bundled `reset.bat` (Windows) and `reset.sh` (Linux) for one-click factory reset.
-            - **Crash-Resilient Hosts Management:** Clean restoration on exit with backward-compatible block scrubbing.
 
             ### Quick Start (Windows):
             1. Download `AntiDPI-${{ github.ref_name }}-windows-x64.zip` below.

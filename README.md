@@ -35,21 +35,36 @@ Precompiled standalone binaries and distribution archives are available under [*
 ## 🚀 Quick Start
 
 ### Windows
-1. Download `AntiDPI-v1.0.3-windows-x64.zip` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
-2. Right-click **`run.bat`** and select **Run as administrator**.
-3. Once the status banner appears, protection is active.
-4. Open Roblox, Discord, or any blocked website — all connections establish immediately.
-5. Closing the window cleanly restores all network settings.
+1. Download `AntiDPI-v1.0.4-windows-x64.zip` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
+2. Extract the archive.
+3. **Choose your launch mode:**
+   - **Interactive Console Mode:** Right-click **`run.bat`** and select **Run as administrator**.
+   - **Silent Background Autostart (No window, starts on boot):** Right-click **`autostart.bat`**, select **Run as administrator**, and choose `[1] Enable Windows Silent Autostart`.
+   - **Silent Background Run Now:** Double-click **`run_silent.vbs`** or run `autostart.bat` -> option `[2]`.
+   - **PM2 Users:** Run `pm2 start ecosystem.config.js`.
+4. To stop or reset network settings: Run **`reset.bat`** as administrator.
 
 ### Linux
-1. Download `AntiDPI-v1.0.3-linux-x64.tar.gz` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
-2. Extract the archive and launch with root privileges:
+1. Download `AntiDPI-v1.0.4-linux-x64.tar.gz` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
+2. Extract the archive:
    ```bash
-   tar -xvf AntiDPI-v1.0.3-linux-x64.tar.gz
+   tar -xvf AntiDPI-v1.0.4-linux-x64.tar.gz
    cd AntiDPI
-   sudo ./run.sh
    ```
-3. To stop and restore all network settings: press `Ctrl+C` or execute `sudo ./reset.sh`.
+3. **Choose your launch mode:**
+   - **Background Daemon & Boot Autostart with PM2 (Recommended - No open terminal):**
+     ```bash
+     chmod +x pm2.sh run.sh reset.sh
+     ./pm2.sh autostart
+     ```
+     - View status: `./pm2.sh status` or `sudo pm2 status`
+     - View logs: `./pm2.sh logs` or `sudo pm2 logs antidpi`
+     - Stop: `./pm2.sh stop`
+   - **Interactive Terminal Mode:**
+     ```bash
+     sudo ./run.sh
+     ```
+4. To stop and restore all network settings: Press `Ctrl+C` or execute `sudo ./reset.sh`.
 
 ---
 

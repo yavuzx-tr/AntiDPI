@@ -12,38 +12,53 @@ if %ERRORLEVEL% neq 0 (
 
 :MENU
 cls
-title AntiDPI - Settings & Autostart
+title AntiDPI - Settings & Autostart (Windows)
 echo ===================================================================
-echo                 AntiDPI - Settings & Autostart
+echo               AntiDPI - Settings & Autostart (Windows)
 echo ===================================================================
 echo.
-echo   [1] Enable Windows Autostart (Start automatically on system logon)
-echo   [2] Disable Windows Autostart (Remove from startup)
-echo   [3] Reset & Fix Internet (Turn off proxy if closed unexpectedly)
-echo   [4] Exit
+echo   [1] Enable Windows Silent Autostart (Starts hidden on boot, no window)
+echo   [2] Start AntiDPI in Background Now (Silent, no console window)
+echo   [3] Disable Windows Autostart (Remove from startup)
+echo   [4] Stop AntiDPI ^& Reset Network (Clean exit ^& direct internet)
+echo   [5] Exit
 echo.
+echo   * Note for PM2 users: You can also run 'pm2 start ecosystem.config.js'
 echo ===================================================================
-set /p choice="Select an option [1, 2, 3, 4]: "
+set /p choice="Select an option [1-5]: "
 
 if "%choice%"=="1" goto ADD
-if "%choice%"=="2" goto REMOVE
-if "%choice%"=="3" goto RESET
-if "%choice%"=="4" exit /b
+if "%choice%"=="2" goto RUN_BACKGROUND
+if "%choice%"=="3" goto REMOVE
+if "%choice%"=="4" goto RESET
+if "%choice%"=="5" exit /b
 goto MENU
 
 :ADD
 cls
-echo [*] Enabling Windows Autostart (Setting scheduled task with highest privileges)...
-schtasks /create /tn "AntiDPI" /tr "\"%~dp0run.bat\"" /sc onlogon /rl highest /f >nul 2>&1
+echo [*] Enabling Windows Silent Autostart (Setting scheduled task with highest privileges)...
+schtasks /create /tn "AntiDPI" /tr "wscript.exe \"%~dp0run_silent.vbs\"" /sc onlogon /rl highest /f >nul 2>&1
 if %ERRORLEVEL% equ 0 (
     echo.
-    echo [SUCCESS] AntiDPI Final has been added to Windows Autostart!
-    echo It will automatically start every time your PC boots up.
+    echo [SUCCESS] AntiDPI has been added to Windows Autostart (Silent Mode)!
+    echo It will start automatically and silently in the background on system boot.
 ) else (
-    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut(\"$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\AntiDPI.lnk\"); $s.TargetPath = \"%~dp0run.bat\"; $s.WorkingDirectory = \"%~dp0\"; $s.Save()" >nul 2>&1
+    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut(\"$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\AntiDPI.lnk\"); $s.TargetPath = \"wscript.exe\"; $s.Arguments = \"`\"%~dp0run_silent.vbs`\"\"; $s.WorkingDirectory = \"%~dp0\"; $s.Save()" >nul 2>&1
     echo.
-    echo [SUCCESS] Added to Windows Startup folder.
+    echo [SUCCESS] Added to Windows Startup folder (Silent Mode).
 )
+echo.
+pause
+goto MENU
+
+:RUN_BACKGROUND
+cls
+echo [*] Starting AntiDPI in background (Silent Mode)...
+start "" wscript.exe "%~dp0run_silent.vbs"
+timeout /t 2 /nobreak >nul
+echo.
+echo [SUCCESS] AntiDPI is now running in the background.
+echo Direct internet protection active (Roblox ^& Discord unblocked).
 echo.
 pause
 goto MENU
@@ -56,29 +71,11 @@ if exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\AntiDPI.lnk" (
     del /f /q "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\AntiDPI.lnk" >nul 2>&1
 )
 echo.
-echo [OK] AntiDPI Final has been removed from Windows Autostart.
+echo [OK] AntiDPI has been removed from Windows Autostart.
 echo.
 pause
 goto MENU
 
 :RESET
-cls
-echo [*] Resetting Windows Proxy and DNS Settings to default...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Enable-NetAdapterBinding -Name * -ComponentId ms_tcpip6 -ErrorAction SilentlyContinue" >nul 2>&1
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$h = 'C:\Windows\System32\drivers\etc\hosts'; if (Test-Path $h) { $c = [IO.File]::ReadAllText($h); $c = [Text.RegularExpressions.Regex]::Replace($c, '(?s)# --- ANTIDPI ROBLOX BYPASS START ---.*?# --- ANTIDPI ROBLOX BYPASS END ---\r?\n?', ''); [IO.File]::WriteAllText($h, $c) }" >nul 2>&1
-for /f "tokens=4*" %%a in ('netsh interface show interface ^| findstr "Connected"') do netsh interface ip set dns name="%%b" dhcp >nul 2>&1
-ipconfig /flushdns >nul 2>&1
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
-REG DELETE "HKCU\Environment" /v ALL_PROXY /f >nul 2>&1
-REG DELETE "HKCU\Environment" /v all_proxy /f >nul 2>&1
-REG DELETE "HKCU\Environment" /v HTTP_PROXY /f >nul 2>&1
-REG DELETE "HKCU\Environment" /v HTTPS_PROXY /f >nul 2>&1
-netsh advfirewall firewall delete rule name="AntiDPI_BlockQUIC" >nul 2>&1
-powershell -NoProfile -Command "$s=@'[DllImport(\"wininet.dll\")]public static extern bool InternetSetOption(IntPtr h,int o,IntPtr b,int l);'@;$w=Add-Type -MemberDefinition $s -Name W -PassThru;[W]::InternetSetOption(0,39,0,0);[W]::InternetSetOption(0,37,0,0)" >nul 2>&1
-echo.
-echo [SUCCESS] Windows proxy has been completely disabled and refreshed.
-echo Direct internet connection restored!
-echo.
-pause
+call "%~dp0reset.bat"
 goto MENU
