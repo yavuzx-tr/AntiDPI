@@ -175,6 +175,14 @@ var (
 		"dl.discordapp.net":           {"162.159.138.232", "162.159.137.232"},
 		"discord.gg":                  {"162.159.138.232", "162.159.137.232"},
 		"discord.media":               {"162.159.138.232", "162.159.137.232"},
+		"support.discord.com":         {"162.159.138.232", "162.159.137.232", "162.159.128.233", "162.159.135.232", "162.159.136.232"},
+		"dis.gd":                      {"162.159.138.232", "162.159.137.232"},
+		"discordstatus.com":           {"162.159.138.232", "162.159.137.232"},
+		"discordmerch.com":            {"162.159.138.232", "162.159.137.232"},
+		"discord.co":                  {"162.159.138.232", "162.159.137.232"},
+		"devforum.roblox.com":         robloxWebCluster,
+		"create.roblox.com":           robloxWebCluster,
+		"help.roblox.com":             robloxWebCluster,
 	}
 	pinnedRobloxHosts = pinnedHosts
 )
@@ -330,11 +338,15 @@ func GetCandidateIPs(host string) []string {
 		result = append(result, robloxApiCluster...)
 	} else if strings.HasSuffix(lowerHost, ".rbxcdn.com") {
 		result = append(result, "18.239.255.42", "18.239.255.127", "2.16.16.154")
-	} else if strings.HasSuffix(lowerHost, ".discord.com") ||
-		strings.HasSuffix(lowerHost, ".discordapp.com") ||
-		strings.HasSuffix(lowerHost, ".discord.gg") ||
-		strings.HasSuffix(lowerHost, ".discordapp.net") ||
-		strings.HasSuffix(lowerHost, ".discord.media") {
+	} else if strings.HasSuffix(lowerHost, ".discord.com") || lowerHost == "discord.com" ||
+		strings.HasSuffix(lowerHost, ".discordapp.com") || lowerHost == "discordapp.com" ||
+		strings.HasSuffix(lowerHost, ".discord.gg") || lowerHost == "discord.gg" ||
+		strings.HasSuffix(lowerHost, ".discordapp.net") || lowerHost == "discordapp.net" ||
+		strings.HasSuffix(lowerHost, ".discord.media") || lowerHost == "discord.media" ||
+		strings.HasSuffix(lowerHost, ".dis.gd") || lowerHost == "dis.gd" ||
+		strings.HasSuffix(lowerHost, ".discordstatus.com") || lowerHost == "discordstatus.com" ||
+		strings.HasSuffix(lowerHost, ".discordmerch.com") || lowerHost == "discordmerch.com" ||
+		strings.HasSuffix(lowerHost, ".discord.co") || lowerHost == "discord.co" {
 		result = append(result, "162.159.138.232", "162.159.137.232")
 	}
 
@@ -461,7 +473,11 @@ func isLocalBypassDomain(qName string) bool {
 		q == "discordapp.com" || strings.HasSuffix(q, ".discordapp.com") ||
 		q == "discord.gg" || strings.HasSuffix(q, ".discord.gg") ||
 		q == "discordapp.net" || strings.HasSuffix(q, ".discordapp.net") ||
-		q == "discord.media" || strings.HasSuffix(q, ".discord.media") {
+		q == "discord.media" || strings.HasSuffix(q, ".discord.media") ||
+		q == "dis.gd" || strings.HasSuffix(q, ".dis.gd") ||
+		q == "discordstatus.com" || strings.HasSuffix(q, ".discordstatus.com") ||
+		q == "discordmerch.com" || strings.HasSuffix(q, ".discordmerch.com") ||
+		q == "discord.co" || strings.HasSuffix(q, ".discord.co") {
 		return true
 	}
 	return false

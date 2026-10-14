@@ -193,6 +193,13 @@ func (r *TransparentRelay) handleHTTPConn(clientConn net.Conn) {
 		return
 	}
 
+	if req.URL.Path == "/proxy.pac" || req.URL.Path == "/wpad.dat" {
+		pac := GetPACScript()
+		resp := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/x-ns-proxy-autoconfig\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s", len(pac), pac)
+		_, _ = clientConn.Write([]byte(resp))
+		return
+	}
+
 	host := req.Host
 	if strings.Contains(host, ":") {
 		h, _, err := net.SplitHostPort(host)

@@ -45,13 +45,14 @@ echo   [/] Starting AntiDPI Engine (Zero-Risk Transparent Mode)...
 echo.
 
 :: Launch pure Go standalone engine (Surgical transparent routing - No global proxy, no adapter hijack)
-"%~dp0bin\antidpi.exe" -autoproxy=false -dns=false
+"%~dp0bin\antidpi.exe" -pac=true -autoproxy=false -dns=false
 
 :: Cleanup on exit
 cls
 echo.
 echo [*] Restoring network settings...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = '$env:WINDIR\System32\drivers\etc\hosts'; if (Test-Path $p) { $c = [System.IO.File]::ReadAllText($p); $c = [System.Text.RegularExpressions.Regex]::Replace($c, '(?s)# --- ANTIDPI.*?# --- ANTIDPI.*?END ---[\r\n]*', ''); [System.IO.File]::WriteAllText($p, $c) }" >nul 2>&1
+reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /f >nul 2>&1
 netsh advfirewall firewall delete rule name=AntiDPI_BlockQUIC >nul 2>&1
 ipconfig /flushdns >nul 2>&1
 timeout /t 1 /nobreak >nul

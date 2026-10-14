@@ -24,6 +24,7 @@ taskkill /f /im antidpi.old.exe >nul 2>&1
 echo [*] Windows Proxy ayarlari sifirlaniyor...
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
 reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /f >nul 2>&1
+reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /f >nul 2>&1
 netsh winhttp reset proxy >nul 2>&1
 
 echo [*] Ortam degiskenleri temizleniyor...

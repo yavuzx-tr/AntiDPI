@@ -191,7 +191,37 @@ func (s *ProxyServer) dialAndConnectTLS(targetHost, port string, payload []byte,
 	return nil, fmt.Errorf("all endpoints failed, last: %v", lastErr)
 }
 
+// GetPACScript returns the dynamic PAC script that wildcard-routes all Discord and Roblox traffic
+func GetPACScript() string {
+	return `function FindProxyForURL(url, host) {
+    var h = host.toLowerCase();
+    if (dnsDomainIs(h, ".discord.com") || h === "discord.com" ||
+        dnsDomainIs(h, ".discordapp.com") || h === "discordapp.com" ||
+        dnsDomainIs(h, ".discord.gg") || h === "discord.gg" ||
+        dnsDomainIs(h, ".discordapp.net") || h === "discordapp.net" ||
+        dnsDomainIs(h, ".discord.media") || h === "discord.media" ||
+        dnsDomainIs(h, ".dis.gd") || h === "dis.gd" ||
+        dnsDomainIs(h, ".discordstatus.com") || h === "discordstatus.com" ||
+        dnsDomainIs(h, ".discordmerch.com") || h === "discordmerch.com" ||
+        dnsDomainIs(h, ".discord.co") || h === "discord.co" ||
+        dnsDomainIs(h, ".roblox.com") || h === "roblox.com" ||
+        dnsDomainIs(h, ".rbxcdn.com") || h === "rbxcdn.com" ||
+        dnsDomainIs(h, ".rbx.com") || h === "rbx.com" ||
+        dnsDomainIs(h, ".robloxlabs.com") || h === "robloxlabs.com") {
+        return "PROXY 127.0.0.1:8080; DIRECT";
+    }
+    return "DIRECT";
+}`
+}
+
 func (s *ProxyServer) handlePlainHTTP(clientConn net.Conn, br *bufio.Reader, req *http.Request) {
+	if req.URL.Path == "/proxy.pac" || req.URL.Path == "/wpad.dat" {
+		pac := GetPACScript()
+		resp := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/x-ns-proxy-autoconfig\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s", len(pac), pac)
+		_, _ = clientConn.Write([]byte(resp))
+		return
+	}
+
 	rawHost := req.Host
 	host := rawHost
 	port := "80"

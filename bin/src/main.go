@@ -115,6 +115,7 @@ func cleanupAll() {
 			activeRelay.Close()
 		}
 		DisableHosts()
+		DisablePAC()
 		RestoreAdapterDNS()
 		DisableSystemProxy()
 		disableQUICBlock()
@@ -132,6 +133,7 @@ func main() {
 
 	portFlag := flag.Int("port", 8080, "Local proxy port")
 	autoProxy := flag.Bool("autoproxy", false, "Configure Windows WinINet system proxy")
+	pacFlag := flag.Bool("pac", true, "Configure Windows WinINet PAC wildcard auto-config")
 	dnsFlag := flag.Bool("dns", false, "Enable UDP Port 53 DoH relay on 127.0.0.1:53")
 	flag.Parse()
 
@@ -152,6 +154,15 @@ func main() {
 	} else {
 		activeRelay = relay
 		LogSuccess("Transparent SNI Relay active on 127.0.0.1:443 & 127.0.0.1:80.")
+	}
+
+	if *pacFlag {
+		pacURL := fmt.Sprintf("http://127.0.0.1:%d/proxy.pac", *portFlag)
+		if err := EnablePAC(pacURL); err != nil {
+			LogAlert(fmt.Sprintf("PAC note: %v", err))
+		} else {
+			LogSuccess("Wildcard PAC routing active (all Discord & Roblox subdomains covered).")
+		}
 	}
 
 	if *dnsFlag {

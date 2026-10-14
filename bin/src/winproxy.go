@@ -175,6 +175,71 @@ func DisableSystemProxy() {
 	disableEnvProxy()
 }
 
+// EnablePAC configures Windows Internet Settings to use the local AutoConfigURL PAC file
+func EnablePAC(pacURL string) error {
+	subKey, _ := syscall.UTF16PtrFromString(`Software\Microsoft\Windows\CurrentVersion\Internet Settings`)
+	var hKey uintptr
+	r, _, _ := procRegOpenKeyExW.Call(
+		uintptr(HKEY_CURRENT_USER),
+		uintptr(unsafe.Pointer(subKey)),
+		0,
+		uintptr(KEY_WRITE),
+		uintptr(unsafe.Pointer(&hKey)),
+	)
+	if r != 0 {
+		return fmt.Errorf("failed to open registry key: %d", r)
+	}
+	defer procRegCloseKey.Call(hKey)
+
+	val, _ := syscall.UTF16FromString(pacURL)
+	valName, _ := syscall.UTF16PtrFromString("AutoConfigURL")
+	procRegSetValueExW.Call(
+		hKey,
+		uintptr(unsafe.Pointer(valName)),
+		0,
+		uintptr(REG_SZ),
+		uintptr(unsafe.Pointer(&val[0])),
+		uintptr(len(val)*2),
+	)
+
+	// Keep ProxyEnable = 0 so general internet traffic is never hijacked
+	zeroVal := uint32(0)
+	peName, _ := syscall.UTF16PtrFromString("ProxyEnable")
+	procRegSetValueExW.Call(
+		hKey,
+		uintptr(unsafe.Pointer(peName)),
+		0,
+		uintptr(REG_DWORD),
+		uintptr(unsafe.Pointer(&zeroVal)),
+		uintptr(4),
+	)
+
+	notifyWinINet()
+	return nil
+}
+
+// DisablePAC removes AutoConfigURL from Windows Internet Settings
+func DisablePAC() {
+	subKey, _ := syscall.UTF16PtrFromString(`Software\Microsoft\Windows\CurrentVersion\Internet Settings`)
+	var hKey uintptr
+	r, _, _ := procRegOpenKeyExW.Call(
+		uintptr(HKEY_CURRENT_USER),
+		uintptr(unsafe.Pointer(subKey)),
+		0,
+		uintptr(KEY_WRITE),
+		uintptr(unsafe.Pointer(&hKey)),
+	)
+	if r != 0 {
+		return
+	}
+	defer procRegCloseKey.Call(hKey)
+
+	valName, _ := syscall.UTF16PtrFromString("AutoConfigURL")
+	procRegDeleteValueW.Call(hKey, uintptr(unsafe.Pointer(valName)))
+
+	notifyWinINet()
+}
+
 func enableEnvProxy(proxyURL string) {
 	subKey, _ := syscall.UTF16PtrFromString(`Environment`)
 	var hKey uintptr
@@ -364,6 +429,16 @@ var hostsEntries = []string{
 	"127.0.0.1 engagement.roblox.com",
 	"127.0.0.1 private-messages.roblox.com",
 	"127.0.0.1 share.roblox.com",
+	"127.0.0.1 devforum.roblox.com",
+	"127.0.0.1 create.roblox.com",
+	"127.0.0.1 talent.roblox.com",
+	"127.0.0.1 education.roblox.com",
+	"127.0.0.1 help.roblox.com",
+	"127.0.0.1 en.help.roblox.com",
+	"127.0.0.1 corp.roblox.com",
+	"127.0.0.1 rbx.com",
+	"127.0.0.1 www.rbx.com",
+	"127.0.0.1 robloxlabs.com",
 
 	// Roblox 3D Avatar Rendering & Asset CDNs
 	"127.0.0.1 tr.rbxcdn.com",
@@ -391,21 +466,42 @@ var hostsEntries = []string{
 	// Discord Web, Client & Gateway
 	"127.0.0.1 discord.com",
 	"127.0.0.1 www.discord.com",
+	"127.0.0.1 support.discord.com",
+	"127.0.0.1 support-dev.discord.com",
+	"127.0.0.1 blog.discord.com",
+	"127.0.0.1 status.discord.com",
 	"127.0.0.1 canary.discord.com",
 	"127.0.0.1 ptb.discord.com",
+	"127.0.0.1 streamkit.discord.com",
+	"127.0.0.1 safety.discord.com",
+	"127.0.0.1 developer.discord.com",
+	"127.0.0.1 admin.discord.com",
+	"127.0.0.1 updates.discord.com",
+	"127.0.0.1 dl.discord.com",
+	"127.0.0.1 cdn.discord.com",
+	"127.0.0.1 media.discord.com",
+	"127.0.0.1 router.discord.com",
 	"127.0.0.1 discordapp.com",
 	"127.0.0.1 www.discordapp.com",
+	"127.0.0.1 support.discordapp.com",
+	"127.0.0.1 status.discordapp.com",
+	"127.0.0.1 canary.discordapp.com",
+	"127.0.0.1 ptb.discordapp.com",
 	"127.0.0.1 gateway.discord.gg",
 	"127.0.0.1 cdn.discordapp.com",
 	"127.0.0.1 media.discordapp.net",
 	"127.0.0.1 images-ext-1.discordapp.net",
 	"127.0.0.1 images-ext-2.discordapp.net",
-	"127.0.0.1 status.discord.com",
 	"127.0.0.1 router.discordapp.net",
-	"127.0.0.1 updates.discord.com",
+	"127.0.0.1 updates.discordapp.com",
 	"127.0.0.1 dl.discordapp.net",
 	"127.0.0.1 discord.gg",
 	"127.0.0.1 discord.media",
+	"127.0.0.1 latency.discord.media",
+	"127.0.0.1 dis.gd",
+	"127.0.0.1 discordstatus.com",
+	"127.0.0.1 discordmerch.com",
+	"127.0.0.1 discord.co",
 }
 
 // EnableHosts injects direct unblocked Roblox and Discord IPs into Windows hosts file to bypass ISP DNS sinkholes
