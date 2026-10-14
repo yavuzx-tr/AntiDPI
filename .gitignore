@@ -10,6 +10,7 @@
 *.tar.gz
 antidpi-linux-amd64
 bin/antidpi_linux
+bin/antidpi
 
 
 # Test and coverage artifacts

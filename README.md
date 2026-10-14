@@ -35,17 +35,17 @@ Precompiled standalone binaries and distribution archives are available under [*
 ## 🚀 Quick Start
 
 ### Windows
-1. Download `AntiDPI-v1.0.2-windows-x64.zip` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
+1. Download `AntiDPI-v1.0.3-windows-x64.zip` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
 2. Right-click **`run.bat`** and select **Run as administrator**.
 3. Once the status banner appears, protection is active.
 4. Open Roblox, Discord, or any blocked website — all connections establish immediately.
 5. Closing the window cleanly restores all network settings.
 
 ### Linux
-1. Download `AntiDPI-v1.0.2-linux-x64.tar.gz` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
+1. Download `AntiDPI-v1.0.3-linux-x64.tar.gz` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
 2. Extract the archive and launch with root privileges:
    ```bash
-   tar -xvf AntiDPI-v1.0.2-linux-x64.tar.gz
+   tar -xvf AntiDPI-v1.0.3-linux-x64.tar.gz
    cd AntiDPI
    sudo ./run.sh
    ```

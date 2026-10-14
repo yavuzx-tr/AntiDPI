@@ -36,7 +36,7 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.2" }
+          if (-not $tag -or $tag -eq "" -or $tag -like "*/*") { $tag = "v1.0.3" }
           
           # Windows Package
           $winZipName = "AntiDPI-${tag}-windows-x64.zip"
@@ -72,12 +72,13 @@ jobs:
             ## AntiDPI ${{ github.ref_name }} - Standalone TCP Desync & Bypass Engine (Windows & Linux)
 
             ### Highlights & What's New:
-            - **Native Linux Support:** Full Linux compatibility with zero external dependencies. Verified on Ubuntu / Debian / Oracle Linux. Includes root `run.sh` and emergency `reset.sh`.
-            - **Full Roblox Avatar & 3D Thumbnail Support:** Fixed `https://www.roblox.com/my/avatar` and 3D avatar preview. Added `tr.rbxcdn.com`, `c0..c7.rbxcdn.com` (character meshes & 3D clothing), `t0..t7.rbxcdn.com`, `catalog.roblox.com`, and `itemconfiguration.roblox.com`.
-            - **Reliable Game Joins (Zero "Retry" Popups):** Added `matchmaking.roblox.com` and increased connection & ServerHello handshake timeouts to 4000ms to eliminate game join drops on high-latency routes.
-            - **Zero-Risk Transparent Mode:** No global proxy, no adapter DNS hijacking, no persistent registry tampering.
-            - **Discord Desktop & WebRTC Bypass:** Continuous unblocked Cloudflare edge routing for gateway, voice signaling, and app updates (`discord.com`, `support.discord.com`, `gateway.discord.gg`).
-            - **Instant Emergency Reset:** Bundled `reset.bat` (Windows) and `reset.sh` (Linux) for one-click factory reset of all network and hosts settings.
+            - **Discord QR Code Login (Remote Auth) Support:** Full unblocked support for `wss://remote-auth-gateway.discord.gg/?v=2` and remote authentication. Resolves missing/infinite loading QR codes on desktop client login screens.
+            - **Expanded Discord Gateway & Media Cluster:** Added `remote-auth-gateway.discord.gg`, `remote-auth.discord.gg`, `qr.discord.gg`, `voice-gateway.discord.gg`, and web app endpoints (`app.discord.com`, `auth.discord.com`, `login.discord.com`).
+            - **Native Linux Support:** Full Linux compatibility with zero external dependencies. Verified on Nobara / Fedora / Ubuntu / Debian / Oracle Linux. Includes root `run.sh` and emergency `reset.sh`.
+            - **Full Roblox Avatar & 3D Thumbnail Support:** Character meshes & 3D clothing previews unblocked (`tr.rbxcdn.com`, `c0..c7.rbxcdn.com`, `t0..t7.rbxcdn.com`).
+            - **Reliable Game Joins (Zero "Retry" Popups):** Added `matchmaking.roblox.com` and increased dial timeouts.
+            - **Zero-Risk Transparent Mode:** No global proxy hijacking, no persistent registry tampering.
+            - **Instant Emergency Reset:** Bundled `reset.bat` (Windows) and `reset.sh` (Linux) for one-click factory reset.
             - **Crash-Resilient Hosts Management:** Clean restoration on exit with backward-compatible block scrubbing.
 
             ### Quick Start (Windows):
