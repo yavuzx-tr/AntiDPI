@@ -35,7 +35,7 @@ Precompiled standalone binaries and distribution archives are available under [*
 ## 🚀 Quick Start
 
 ### Windows
-1. Download `AntiDPI-v1.0.4-windows-x64.zip` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
+1. Download `AntiDPI-v1.1.0-windows-x64.zip` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
 2. Extract the archive.
 3. **Choose your launch mode:**
    - **Interactive Console Mode:** Right-click **`run.bat`** and select **Run as administrator**.
@@ -45,10 +45,10 @@ Precompiled standalone binaries and distribution archives are available under [*
 4. To stop or reset network settings: Run **`reset.bat`** as administrator.
 
 ### Linux
-1. Download `AntiDPI-v1.0.4-linux-x64.tar.gz` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
+1. Download `AntiDPI-v1.1.0-linux-x64.tar.gz` from [**Releases**](https://github.com/yavuzx-tr/AntiDPI/releases).
 2. Extract the archive:
    ```bash
-   tar -xvf AntiDPI-v1.0.4-linux-x64.tar.gz
+   tar -xvf AntiDPI-v1.1.0-linux-x64.tar.gz
    cd AntiDPI
    ```
 3. **Choose your launch mode:**
