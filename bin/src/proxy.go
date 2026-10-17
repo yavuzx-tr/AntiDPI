@@ -191,26 +191,35 @@ func (s *ProxyServer) dialAndConnectTLS(targetHost, port string, payload []byte,
 	return nil, fmt.Errorf("all endpoints failed, last: %v", lastErr)
 }
 
-// GetPACScript returns the dynamic PAC script that wildcard-routes all Discord and Roblox traffic
+// GetPACScript returns the dynamic PAC script that wildcard-routes all internet traffic through AntiDPI
 func GetPACScript() string {
 	return `function FindProxyForURL(url, host) {
     var h = host.toLowerCase();
-    if (dnsDomainIs(h, ".discord.com") || h === "discord.com" ||
-        dnsDomainIs(h, ".discordapp.com") || h === "discordapp.com" ||
-        dnsDomainIs(h, ".discord.gg") || h === "discord.gg" ||
-        dnsDomainIs(h, ".discordapp.net") || h === "discordapp.net" ||
-        dnsDomainIs(h, ".discord.media") || h === "discord.media" ||
-        dnsDomainIs(h, ".dis.gd") || h === "dis.gd" ||
-        dnsDomainIs(h, ".discordstatus.com") || h === "discordstatus.com" ||
-        dnsDomainIs(h, ".discordmerch.com") || h === "discordmerch.com" ||
-        dnsDomainIs(h, ".discord.co") || h === "discord.co" ||
-        dnsDomainIs(h, ".roblox.com") || h === "roblox.com" ||
-        dnsDomainIs(h, ".rbxcdn.com") || h === "rbxcdn.com" ||
-        dnsDomainIs(h, ".rbx.com") || h === "rbx.com" ||
-        dnsDomainIs(h, ".robloxlabs.com") || h === "robloxlabs.com") {
-        return "PROXY 127.0.0.1:8080; DIRECT";
+
+    // Direct access for plain/local hostnames and intranet
+    if (isPlainHostName(h) ||
+        h === "localhost" ||
+        h === "127.0.0.1" ||
+        h === "::1" ||
+        shExpMatch(h, "*.local") ||
+        shExpMatch(h, "*.lan") ||
+        shExpMatch(h, "*.home") ||
+        shExpMatch(h, "*.internal")) {
+        return "DIRECT";
     }
-    return "DIRECT";
+
+    // Direct access for private IP networks (modem / router / LAN)
+    if (shExpMatch(h, "10.*") ||
+        shExpMatch(h, "192.168.*") ||
+        shExpMatch(h, "172.16.*") || shExpMatch(h, "172.17.*") ||
+        shExpMatch(h, "172.18.*") || shExpMatch(h, "172.19.*") ||
+        shExpMatch(h, "172.2*") ||
+        shExpMatch(h, "172.30.*") || shExpMatch(h, "172.31.*")) {
+        return "DIRECT";
+    }
+
+    // Route all internet traffic through AntiDPI with graceful direct fallback
+    return "PROXY 127.0.0.1:8080; DIRECT";
 }`
 }
 
@@ -245,6 +254,10 @@ func (s *ProxyServer) handlePlainHTTP(clientConn net.Conn, br *bufio.Reader, req
 
 	// Normalize request for origin server forwarding
 	req.RequestURI = ""
+	if req.URL != nil {
+		req.URL.Scheme = ""
+		req.URL.Host = ""
+	}
 	req.Header.Del("Proxy-Connection")
 
 	if err := req.Write(targetConn); err != nil {

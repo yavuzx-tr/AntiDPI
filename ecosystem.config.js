@@ -6,8 +6,8 @@ const isWin = os.platform() === 'win32';
 module.exports = {
   apps: [{
     name: 'antidpi',
-    script: isWin ? path.join(__dirname, 'bin', 'antidpi.exe') : path.join(__dirname, 'run.sh'),
-    args: isWin ? '-pac=true -autoproxy=false -dns=false' : '',
+    script: isWin ? path.join(__dirname, 'bin', 'antidpi.exe') : path.join(__dirname, 'bin', 'antidpi'),
+    args: '-port=8080 -pac=true -autoproxy=false -dns=false',
     cwd: __dirname,
     autorestart: true,
     watch: false,

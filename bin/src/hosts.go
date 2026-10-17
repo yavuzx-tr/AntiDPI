@@ -156,6 +156,22 @@ var hostsEntries = []string{
 	"127.0.0.1 discordstatus.com",
 	"127.0.0.1 discordmerch.com",
 	"127.0.0.1 discord.co",
+
+	// Popular Blocked Services (Turkey ISP DNS Sinkhole Bypass)
+	"127.0.0.1 pastebin.com",
+	"127.0.0.1 www.pastebin.com",
+	"127.0.0.1 imgur.com",
+	"127.0.0.1 i.imgur.com",
+	"127.0.0.1 m.imgur.com",
+	"127.0.0.1 wattpad.com",
+	"127.0.0.1 www.wattpad.com",
+	"127.0.0.1 eksisozluk.com",
+	"127.0.0.1 www.eksisozluk.com",
+	"127.0.0.1 eksisozluk1923.com",
+	"127.0.0.1 eksisozluk2023.com",
+	"127.0.0.1 proton.me",
+	"127.0.0.1 mail.proton.me",
+	"127.0.0.1 protonmail.com",
 }
 
 // EnableHosts injects direct unblocked Roblox and Discord IPs into hosts file to bypass ISP DNS sinkholes

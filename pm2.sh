@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Ensure PM2 is in PATH
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+export PATH="/home/tux/.local/node/bin:/home/tux/.local/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 
 if ! command -v pm2 >/dev/null 2>&1; then
     echo "[!] PM2 is not installed or not in PATH."
@@ -17,6 +17,7 @@ ACTION="$1"
 
 run_start() {
     echo "[*] Starting AntiDPI in background with PM2 (daemon mode)..."
+    sudo env "PATH=$PATH" pm2 delete antidpi 2>/dev/null || true
     sudo env "PATH=$PATH" pm2 start "$SCRIPT_DIR/ecosystem.config.js"
     echo ""
     echo "[OK] AntiDPI is running in the background. No terminal window will stay open."

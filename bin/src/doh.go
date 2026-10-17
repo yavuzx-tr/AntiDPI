@@ -484,7 +484,15 @@ func isLocalBypassDomain(qName string) bool {
 		q == "dis.gd" || strings.HasSuffix(q, ".dis.gd") ||
 		q == "discordstatus.com" || strings.HasSuffix(q, ".discordstatus.com") ||
 		q == "discordmerch.com" || strings.HasSuffix(q, ".discordmerch.com") ||
-		q == "discord.co" || strings.HasSuffix(q, ".discord.co") {
+		q == "discord.co" || strings.HasSuffix(q, ".discord.co") ||
+		q == "pastebin.com" || strings.HasSuffix(q, ".pastebin.com") ||
+		q == "imgur.com" || strings.HasSuffix(q, ".imgur.com") ||
+		q == "wattpad.com" || strings.HasSuffix(q, ".wattpad.com") ||
+		q == "eksisozluk.com" || strings.HasSuffix(q, ".eksisozluk.com") ||
+		q == "eksisozluk1923.com" || strings.HasSuffix(q, ".eksisozluk1923.com") ||
+		q == "eksisozluk2023.com" || strings.HasSuffix(q, ".eksisozluk2023.com") ||
+		q == "proton.me" || strings.HasSuffix(q, ".proton.me") ||
+		q == "protonmail.com" || strings.HasSuffix(q, ".protonmail.com") {
 		return true
 	}
 	return false

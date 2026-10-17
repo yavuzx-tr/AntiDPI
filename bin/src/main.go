@@ -62,7 +62,7 @@ func printBanner() {
 	fmt.Println()
 	fmt.Printf("   %s[OK]%s Engine Status : %sActive (Running in Silent Mode)%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
 	fmt.Printf("   %s[OK]%s SNI Relay     : %sTransparent 127.0.0.1:443 & :80%s\n", ColorGreen, ColorReset, ColorWhite, ColorReset)
-	fmt.Printf("   %s[OK]%s Protection    : %sRoblox & Discord (Zero-Risk Transparent Mode)%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
+	fmt.Printf("   %s[OK]%s Protection    : %sUniversal Bypass (All Blocked Websites Covered)%s\n", ColorGreen, ColorReset, ColorGreen, ColorReset)
 	fmt.Println()
 	fmt.Printf("%s =============================================================%s\n", ColorCyan, ColorReset)
 	fmt.Println()
@@ -101,7 +101,7 @@ func main() {
 
 	FlushDNS()
 	EnableHosts()
-	LogSuccess("System DNS cache flushed & edge routes secured (Roblox & Discord).")
+	LogSuccess("System DNS cache flushed & edge routes secured.")
 
 	relay, err := StartTransparentRelay()
 	if err != nil {
@@ -116,7 +116,7 @@ func main() {
 		if err := EnablePAC(pacURL); err != nil {
 			LogAlert(fmt.Sprintf("PAC note: %v", err))
 		} else {
-			LogSuccess("Wildcard PAC routing active (all Discord & Roblox subdomains covered).")
+			LogSuccess("Universal PAC routing active (all blocked websites covered).")
 		}
 	}
 
