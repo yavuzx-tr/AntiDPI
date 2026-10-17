@@ -158,6 +158,8 @@ var hostsEntries = []string{
 	"127.0.0.1 discord.co",
 
 	// Popular Blocked Services (Turkey ISP DNS Sinkhole Bypass)
+	"127.0.0.1 wikileaks.org",
+	"127.0.0.1 www.wikileaks.org",
 	"127.0.0.1 pastebin.com",
 	"127.0.0.1 www.pastebin.com",
 	"127.0.0.1 imgur.com",
