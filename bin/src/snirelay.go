@@ -118,7 +118,7 @@ func (r *TransparentRelay) handleHTTPSConn(clientConn net.Conn) {
 
 	for _, ip := range candidateIPs {
 		addr := net.JoinHostPort(ip, "443")
-		conn, err := net.DialTimeout("tcp", addr, 2500*time.Millisecond)
+		conn, err := net.DialTimeout("tcp", addr, 3500*time.Millisecond)
 		if err != nil {
 			continue
 		}
@@ -133,13 +133,34 @@ func (r *TransparentRelay) handleHTTPSConn(clientConn net.Conn) {
 		}
 
 		// Verify server response (TLS ServerHello) before committing
-		_ = conn.SetReadDeadline(time.Now().Add(2500 * time.Millisecond))
+		_ = conn.SetReadDeadline(time.Now().Add(3500 * time.Millisecond))
 		respBuf := make([]byte, 16384)
 		nr, err := conn.Read(respBuf)
 		_ = conn.SetReadDeadline(time.Time{})
 
 		if err != nil || nr == 0 {
 			conn.Close()
+			// Origin fallback: retry direct clean write to unblocked DoH IP
+			fbConn, fbErr := net.DialTimeout("tcp", addr, 3500*time.Millisecond)
+			if fbErr == nil {
+				if tc, ok := fbConn.(*net.TCPConn); ok {
+					_ = tc.SetNoDelay(true)
+				}
+				if _, fbErr = fbConn.Write(payload); fbErr == nil {
+					_ = fbConn.SetReadDeadline(time.Now().Add(3500 * time.Millisecond))
+					nr, err = fbConn.Read(respBuf)
+					_ = fbConn.SetReadDeadline(time.Time{})
+					if err == nil && nr > 0 {
+						if _, err := clientConn.Write(respBuf[:nr]); err == nil {
+							targetConn = fbConn
+							statsBypassed.Add(1)
+							LogBypass(targetHost, "direct-clean")
+							break
+						}
+					}
+				}
+				fbConn.Close()
+			}
 			continue
 		}
 

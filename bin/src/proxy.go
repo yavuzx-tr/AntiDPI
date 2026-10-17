@@ -149,7 +149,7 @@ func (s *ProxyServer) dialAndConnectTLS(targetHost, port string, payload []byte,
 
 	for _, ip := range candidateIPs {
 		addr := net.JoinHostPort(ip, port)
-		targetConn, err := net.DialTimeout("tcp", addr, 2500*time.Millisecond)
+		targetConn, err := net.DialTimeout("tcp", addr, 3500*time.Millisecond)
 		if err != nil {
 			lastErr = err
 			continue
@@ -165,14 +165,34 @@ func (s *ProxyServer) dialAndConnectTLS(targetHost, port string, payload []byte,
 			continue
 		}
 
-		// Wait up to 2500ms for initial server response (TLS ServerHello)
-		_ = targetConn.SetReadDeadline(time.Now().Add(2500 * time.Millisecond))
+		// Wait up to 3500ms for initial server response (TLS ServerHello)
+		_ = targetConn.SetReadDeadline(time.Now().Add(3500 * time.Millisecond))
 		respBuf := make([]byte, 16384)
 		nr, err := targetConn.Read(respBuf)
 		_ = targetConn.SetReadDeadline(time.Time{})
 
 		if err != nil || nr == 0 {
 			targetConn.Close()
+			// Origin fallback: some CDNs reject segmented ClientHello (anti-slowloris), retry clean direct write to DoH IP
+			fbConn, fbErr := net.DialTimeout("tcp", addr, 3500*time.Millisecond)
+			if fbErr == nil {
+				if tc, ok := fbConn.(*net.TCPConn); ok {
+					_ = tc.SetNoDelay(true)
+				}
+				if _, fbErr = fbConn.Write(payload); fbErr == nil {
+					_ = fbConn.SetReadDeadline(time.Now().Add(3500 * time.Millisecond))
+					nr, err = fbConn.Read(respBuf)
+					_ = fbConn.SetReadDeadline(time.Time{})
+					if err == nil && nr > 0 {
+						if _, err := clientConn.Write(respBuf[:nr]); err == nil {
+							statsBypassed.Add(1)
+							LogBypass(targetHost, "direct-clean")
+							return fbConn, nil
+						}
+					}
+				}
+				fbConn.Close()
+			}
 			lastErr = err
 			continue
 		}

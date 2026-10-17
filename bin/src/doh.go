@@ -245,6 +245,7 @@ func ResolveAllSecure(host string) ([]string, error) {
 			continue
 		}
 
+		var cnameTarget string
 		for _, ans := range res.Answer {
 			if ans.Type == 1 {
 				ip := strings.TrimSpace(ans.Data)
@@ -255,6 +256,14 @@ func ResolveAllSecure(host string) ([]string, error) {
 				if net.ParseIP(ip) != nil {
 					validIPs = append(validIPs, ip)
 				}
+			} else if ans.Type == 5 && cnameTarget == "" {
+				cnameTarget = strings.TrimSuffix(strings.TrimSpace(ans.Data), ".")
+			}
+		}
+		if len(validIPs) == 0 && cnameTarget != "" && cnameTarget != host {
+			cnameIPs, err := ResolveAllSecure(cnameTarget)
+			if err == nil && len(cnameIPs) > 0 {
+				validIPs = append(validIPs, cnameIPs...)
 			}
 		}
 		if len(validIPs) > 0 {
@@ -266,7 +275,7 @@ func ResolveAllSecure(host string) ([]string, error) {
 		ips, err := net.LookupHost(host)
 		if err == nil {
 			for _, ip := range ips {
-				if !strings.HasPrefix(ip, "195.175.") {
+				if !strings.HasPrefix(ip, "195.175.") && ip != "127.0.0.1" && ip != "::1" {
 					validIPs = append(validIPs, ip)
 				}
 			}
