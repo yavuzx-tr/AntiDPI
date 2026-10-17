@@ -52,8 +52,19 @@ if not "%~1"=="-silent" (
     echo.
 )
 
+:: Locate executable
+if exist "%~dp0antidpi.exe" (
+    set "BIN_EXE=%~dp0antidpi.exe"
+) else if exist "%~dp0bin\antidpi.exe" (
+    set "BIN_EXE=%~dp0bin\antidpi.exe"
+) else if exist "%~dp0..\bin\antidpi.exe" (
+    set "BIN_EXE=%~dp0..\bin\antidpi.exe"
+) else (
+    set "BIN_EXE=antidpi.exe"
+)
+
 :: Launch pure Go standalone engine (Surgical transparent routing - No global proxy, no adapter hijack)
-"%~dp0bin\antidpi.exe" -pac=true -autoproxy=false -dns=false
+"%BIN_EXE%" -pac=true -autoproxy=false -dns=false
 
 :: Cleanup on exit
 if not "%~1"=="-silent" (

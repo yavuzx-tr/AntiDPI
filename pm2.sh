@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Ensure PM2 is in PATH
-export PATH="/home/tux/.local/node/bin:/home/tux/.local/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.local/node/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:$PATH"
 
 if ! command -v pm2 >/dev/null 2>&1; then
     echo "[!] PM2 is not installed or not in PATH."

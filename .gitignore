@@ -11,6 +11,7 @@
 antidpi-linux-amd64
 bin/antidpi_linux
 bin/antidpi
+dist/
 
 
 # Test and coverage artifacts
